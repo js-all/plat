@@ -5,7 +5,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -143,13 +143,18 @@ var Actions;
 })(Actions || (Actions = {}));
 var GameEntity = /** @class */ (function (_super) {
     __extends(GameEntity, _super);
-    function GameEntity(width, height, x, y, life, style, sprites, fx, fy, orientation, onDamage, onDeath) {
+    function GameEntity(width, height, x, y, life, sprites, fx, fy, orientation, onDamage, onDeath) {
         if (fx === void 0) { fx = 0; }
         if (fy === void 0) { fy = 0; }
         if (orientation === void 0) { orientation = Orientation.right; }
         if (onDamage === void 0) { onDamage = function () { }; }
         if (onDeath === void 0) { onDeath = function () { }; }
-        var _this = _super.call(this, width, height, x, y, life, style, fx, fy, onDamage, onDeath) || this;
+        var _this = _super.call(this, width, height, x, y, life, {
+            type: 'image',
+            IMGPath: ''
+        }, fx, fy, onDamage, onDeath) || this;
+        _this.animeFrame = 0;
+        _this.maxAnimeFrame = 0;
         _this.orientation = orientation;
         _this.isWalking = false;
         var walkingSprites = {
@@ -235,13 +240,54 @@ var GameEntity = /** @class */ (function (_super) {
             }
         };
         _this.action = Actions.nothing;
+        _this._sprite = new Image();
         return _this;
     }
     GameEntity.prototype.move = function () {
         this.x += this.fx;
         this.y += this.fy;
     };
+    Object.defineProperty(GameEntity.prototype, "sprite", {
+        get: function () {
+            return this._sprite;
+        },
+        set: function (value) {
+            this._sprite = value;
+            this.style.IMGPath = value.src;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    GameEntity.prototype.setAction = function (action) {
+        this.action = action;
+        this.animeFrame = 0;
+    };
     GameEntity.prototype.anime = function () {
+        if (this.action === Actions.attacking) {
+            if (this.orientation === Orientation.left)
+                this.sprite = this.sprites.attacking.sprites.left[this.animeFrame];
+            else if (this.orientation === Orientation.right)
+                this.sprite = this.sprites.attacking.sprites.right[this.animeFrame];
+        }
+        else if (this.action === Actions.walking) {
+            if (this.orientation === Orientation.left)
+                this.sprite = this.sprites.walking.sprites.left[this.animeFrame];
+            else if (this.orientation === Orientation.right)
+                this.sprite = this.sprites.walking.sprites.right[this.animeFrame];
+        }
+        else if (this.action === Actions.jumping) {
+            if (this.orientation === Orientation.left)
+                this.sprite = this.sprites.jumping.sprites.left[this.animeFrame];
+            else if (this.orientation === Orientation.right)
+                this.sprite = this.sprites.jumping.sprites.right[this.animeFrame];
+        }
+        else if (this.action === Actions.nothing) {
+            if (this.orientation === Orientation.left)
+                this.sprite = this.sprites.nothing.sprites.left[this.animeFrame];
+            else if (this.orientation === Orientation.right)
+                this.sprite = this.sprites.nothing.sprites.right[this.animeFrame];
+        }
+        this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 0 : this.animeFrame + 1;
     };
     GameEntity.maxAnimeTime = 10000;
     return GameEntity;

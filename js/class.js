@@ -21,6 +21,7 @@ var GameElemement = /** @class */ (function () {
         if (fy === void 0) { fy = 0; }
         if (onDamage === void 0) { onDamage = function () { }; }
         if (onDeath === void 0) { onDeath = function () { }; }
+        //definition des proprierter et verrification de type et de valeur si besoin
         this.width = width;
         this.height = height;
         this.x = x;
@@ -51,6 +52,7 @@ var GameElemement = /** @class */ (function () {
      * @param ctx - le context sur lequel dessiner.
      */
     GameElemement.prototype.draw = function (ctx) {
+        //si son type de style est un rectangle
         if (this.style.type === 'rectangle') {
             var color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
             ctx.fillStyle = color;

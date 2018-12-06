@@ -172,8 +172,15 @@ class GameEntity extends GameElemement {
     isWalking: boolean;
     sprites: GameEntityTrueSpriteInterface;
     action: Actions;
-    constructor(width: number, height: number, x: number, y: number, life: number, style: GameElemementStyleInterface, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, onDamage: Function = function () { }, onDeath: Function = function () { }) {
-        super(width, height, x, y, life, style, fx, fy, onDamage, onDeath);
+    animeFrame: number = 0;
+    maxAnimeFrame :number = 0;
+    _sprite :HTMLImageElement;
+
+    constructor(width: number, height: number, x: number, y: number, life: number, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, onDamage: Function = function () { }, onDeath: Function = function () { }) {
+        super(width, height, x, y, life, {
+            type: 'image',
+            IMGPath: ''
+        }, fx, fy, onDamage, onDeath);
         this.orientation = orientation;
         this.isWalking = false;
         let walkingSprites: GameEtityTrueActionSpritesSpriteInterface = {
@@ -255,13 +262,39 @@ class GameEntity extends GameElemement {
             }
         }
         this.action = Actions.nothing;
+        this._sprite = new Image();
     }
     move() {
         this.x += this.fx;
         this.y += this.fy;
 
     }
+    set sprite(value :HTMLImageElement) {
+        this._sprite = value;
+        this.style.IMGPath = value.src;
+    }
+    get sprite() :HTMLImageElement {
+        return this._sprite;
+    }
+    setAction(action :Actions) {
+        this.action = action;
+        this.animeFrame = 0;
+    }
     anime() {
+        if (this.action === Actions.attacking) {
+            if (this.orientation === Orientation.left)       this.sprite = this.sprites.attacking.sprites.left [this.animeFrame];
+            else if (this.orientation === Orientation.right) this.sprite = this.sprites.attacking.sprites.right[this.animeFrame];
+        } else if (this.action === Actions.walking) {
+            if (this.orientation === Orientation.left)       this.sprite = this.sprites.walking  .sprites.left [this.animeFrame];
+            else if (this.orientation === Orientation.right) this.sprite = this.sprites.walking  .sprites.right[this.animeFrame];
+        } else if (this.action === Actions.jumping) {
+            if (this.orientation === Orientation.left)       this.sprite = this.sprites.jumping  .sprites.left [this.animeFrame];
+            else if (this.orientation === Orientation.right) this.sprite = this.sprites.jumping  .sprites.right[this.animeFrame];
+        } else if (this.action === Actions.nothing) {
+            if (this.orientation === Orientation.left)       this.sprite = this.sprites.nothing  .sprites.left [this.animeFrame];
+            else if (this.orientation === Orientation.right) this.sprite = this.sprites.nothing  .sprites.right[this.animeFrame];
+        }
+        this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 0 : this.animeFrame + 1; 
 
     }
 }

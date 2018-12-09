@@ -1,9 +1,20 @@
 "use strict";
+/*
+ * js-all tout droits non resérvé
+ */
 /**
  * js-all 2018 tout droits non reservé
  *
  */
 var rgb = /** @class */ (function () {
+    /**
+     *  @class
+     *  @constructor
+     *  @param {Number} [red] - La valeur de rouge dans la couleur. Si non préciser prend la valeur defini dans rgb.config.defaultColor.red.
+     *  @param {Number} [green] - La valeur de vert dans la couleur. Si non préciser prend la valeur defini dans rgb.config.defaultColor.green.
+     *  @param {Number} [blue] - La valeur de bleu dans la couleur. Si non préciser prend la valeur defini dans rgb.config.defaultColor.blue.
+     *  @param {Number} [alpha] - La tansparance de la couleur, valeur entre 0 et 1. Si non préciser prend la valeur defini dans rgb.config.defaultAlpha.
+     */
     function rgb(red, green, blue, alpha) {
         if (red === void 0) { red = rgb.config.defaultColor.red; }
         if (green === void 0) { green = rgb.config.defaultColor.green; }
@@ -26,6 +37,123 @@ var rgb = /** @class */ (function () {
             throw new TypeError("rgb, constructor: type of param alha must be number");
         }
     }
+    /**
+     * donne une couleur aleatoire
+     * @param {Boolean} [alpha = false] - dis si l'alpha va etre aussi generé aleatoirement
+     * @returns {rgb}
+     */
+    rgb.random = function (alpha) {
+        if (alpha === void 0) { alpha = false; }
+        var c = new rgb();
+        c.red = Math.floor(Math.random() * ((255 - 0) + 1) + 0);
+        c.green = Math.floor(Math.random() * ((255 - 0) + 1) + 0);
+        c.blue = Math.floor(Math.random() * ((255 - 0) + 1) + 0);
+        if (alpha) {
+            c.alpha = Math.floor(Math.random() * ((100 - 0) + 1) + 0) / 100;
+        }
+        return c;
+    };
+    ;
+    Object.defineProperty(rgb, "red", {
+        /**
+         * donne une couleur rouge
+         * @returns {rgb}
+         */
+        get: function () {
+            return new rgb(255, 0, 0);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    ;
+    Object.defineProperty(rgb, "green", {
+        /**
+         * donne une couleur verte
+         * @returns {rgb}
+         */
+        get: function () {
+            return new rgb(0, 255, 0);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    ;
+    Object.defineProperty(rgb, "blue", {
+        /**
+         * donne une couleur bleu
+         * @returns {rgb}
+         */
+        get: function () {
+            return new rgb(0, 0, 255);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    ;
+    Object.defineProperty(rgb, "black", {
+        /**
+         * donne une couleur noire
+         * @returns {rgb}
+         */
+        get: function () {
+            return new rgb(0, 0, 0);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    ;
+    Object.defineProperty(rgb, "white", {
+        /**
+         * donne une couleur blanche
+         * @returns {rgb}
+         */
+        get: function () {
+            return new rgb(255, 255, 255);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    ;
+    Object.defineProperty(rgb, "grey", {
+        /**
+         * donne une couleur grise
+         * @returns {rgb}
+         */
+        get: function () {
+            return rgb.createGrey(122.5);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * crée un gris
+     * @param {Number} [g = 122.5] le niveau de gris, de 0 à 255 (0: noir, 255: blanc)
+     */
+    rgb.createGrey = function (g) {
+        if (g === void 0) { g = 122.5; }
+        return new rgb(g, g, g);
+    };
+    ;
+    /**
+     * renvoi une copie d'une couleure
+     * @param {rgb} color la couleur à copier
+     * @param {Boolean} [alpha = true] dis si la fonction va copié l'alpha
+     */
+    rgb.copy = function (color, alpha) {
+        if (alpha === void 0) { alpha = true; }
+        var res = new rgb(color.red, color.green, color.blue);
+        if (alpha) {
+            res.alpha = color.alpha;
+        }
+        return res;
+    };
+    ;
+    rgb._$$loc = function (c) {
+        return "color:" + c + ";";
+    };
+    rgb._$$bloc = function (c) {
+        return "background-color: " + rgb.config.codeLogColor.bg + ";color: " + c + ";";
+    };
     rgb.help = function () {
         var helps = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -35,10 +163,10 @@ var rgb = /** @class */ (function () {
             var help = helps[i].toLowerCase();
             var code = rgb.config.codeLogColor;
             if (help === 'rgb.config') {
-                console.info('%cthe config of rgb class for set his default color and other things.', loc(code.info));
+                console.info('%cthe config of rgb class for set his default color and other things.', rgb._$$loc(code.info));
             }
             else if (help === 'rgb.config.warn') {
-                console.info('%cdefault value: %ctrue%c\nactive or unactive rgb warn.', loc(code.info), loc(code.boolean), loc(code.info));
+                console.info('%cdefault value: %ctrue%c\nactive or unactive rgb warn.', rgb._$$loc(code.info), rgb._$$loc(code.boolean), rgb._$$loc(code.info));
             }
             else if (help === 'rgb.config.overwritecolor') {
                 console.info('%cdefault value: %ctrue%c\n' +
@@ -46,17 +174,17 @@ var rgb = /** @class */ (function () {
                     'ex:\n' +
                     '%c const %cmyColor %c= %cnew %crgb%c.%cblack%c(); \n' +
                     '%c myColor%c.%cbrighter%c().%clogColor%c();   \n' +
-                    ' %cmyColor%c.%clogColor%c();              %c\n' +
+                    '%c myColor%c.%clogColor%c();              %c\n' +
                     '\n' +
                     'if it is true the two loged color will be the same' +
-                    ' but if it is false, the first color will be myColor but brighter of 20 and the second will be just myColor.', loc(code.info), loc(code.boolean), loc(code.info), bloc(code.new) + 'border-top-left-radius:5px;', bloc(code.class), bloc(code.operator), bloc(code.new), bloc(code.class), bloc(code.white), bloc(code.class), bloc(code.white) + 'border-top-right-radius:5px;', bloc(code.red), bloc(code.white), bloc(code.methode), bloc(code.white), bloc(code.methode), bloc(code.white), bloc(code.red), bloc(code.white), bloc(code.methode), bloc(code.white), loc(code.info));
+                    ' but if it is false, the first color will be myColor but brighter of 20 and the second will be just myColor.', rgb._$$loc(code.info), rgb._$$loc(code.boolean), rgb._$$loc(code.info), rgb._$$bloc(code.new) + 'border-top-left-radius:5px;', rgb._$$bloc(code.class), rgb._$$bloc(code.operator), rgb._$$bloc(code.new), rgb._$$bloc(code.class), rgb._$$bloc(code.white), rgb._$$bloc(code.class), rgb._$$bloc(code.white) + 'border-top-right-radius:5px;', rgb._$$bloc(code.red), rgb._$$bloc(code.white), rgb._$$bloc(code.methode), rgb._$$bloc(code.white), rgb._$$bloc(code.methode), rgb._$$bloc(code.white), rgb._$$bloc(code.red) + 'border-bottom-left-radius:5px;', rgb._$$bloc(code.white), rgb._$$bloc(code.methode), rgb._$$bloc(code.white) + 'border-bottom-right-radius:5px;', rgb._$$loc(code.info));
             }
             else if (help === 'rgb.config.defaultalpha') {
             }
             else if (help === 'rgb.config.codelogcolor') {
             }
             else {
-                console.info("%chelp, not found or not writed.", loc(code.info));
+                console.info("%chelp, not found or not writed.", rgb._$$loc(code.info));
             }
         }
     };
@@ -106,7 +234,7 @@ var rgb = /** @class */ (function () {
         if (bright === void 0) { bright = 20; }
         if (typeof bright != 'number')
             throw new TypeError("rgb, brighter: bright params type must be a number");
-        var res = rgb.config.overwriteColor ? this : new rgb.copy(this);
+        var res = rgb.config.overwriteColor ? this : rgb.copy(this);
         res.red += bright;
         res.green += bright;
         res.blue += bright;
@@ -119,7 +247,7 @@ var rgb = /** @class */ (function () {
         if (dark === void 0) { dark = 20; }
         if (typeof dark != 'number')
             throw new TypeError("rgb, darker: dark params type must be a number");
-        var res = rgb.config.overwriteColor ? this : new rgb.copy(this);
+        var res = rgb.config.overwriteColor ? this : rgb.copy(this);
         res.red -= dark;
         res.green -= dark;
         res.blue -= dark;
@@ -127,7 +255,7 @@ var rgb = /** @class */ (function () {
     };
     Object.defineProperty(rgb.prototype, "hex", {
         /**
-         * La meme chose que get() mais renvoi de l'hexadecimal.
+         * La meme chose que value mais renvoi de l'hexadecimal.
          */
         get: function () {
             var alpha = false;
@@ -153,7 +281,7 @@ var rgb = /** @class */ (function () {
      * inverse la couleur
      */
     rgb.prototype.invert = function () {
-        var res = rgb.config.overwriteColor ? this : new rgb.copy(this);
+        var res = rgb.config.overwriteColor ? this : rgb.copy(this);
         res.red = 255 - res.red;
         res.green = 255 - res.green;
         res.blue = 255 - res.blue;
@@ -182,23 +310,20 @@ var rgb = /** @class */ (function () {
         return this;
     };
     /**
-     * permet de rajouter des couleure a rgb ex: rgb.red()
+     * permet de rajouter des couleure a rgb ex: rgb.red
      * @param {String} name - le nom de la nouvelle couleur a rajouter
-     * @param {rgb} color - la couleure qui serat retourner par l'appel de cette nouvelle class
+     * @param {rgb} color - la couleure qui serat retourner par l'appel de ce nouveau getter
      */
-    rgb.addColorClass = function (name, color) {
+    rgb.addColorGetter = function (name, color) {
         if (color === void 0) { color = new rgb(); }
         if (name === undefined)
             throw new Error('rgb, addColorClass: name arg is required');
         if (typeof name !== 'string')
             throw new TypeError('rgb, addColorClass: name arg must be a string');
         Object.defineProperty(rgb, name, {
-            value: /** @class */ (function () {
-                function value() {
-                    return new rgb(color.red, color.green, color.blue, color.alpha);
-                }
-                return value;
-            }())
+            get: function () {
+                return new rgb(color.red, color.green, color.blue, color.alpha);
+            }
         });
     };
     /**
@@ -214,7 +339,7 @@ var rgb = /** @class */ (function () {
             throw new TypeError('rgb, to: percent arg must be a number between 0 and 100 (0 and 100 include)');
         if (percent > 100 || percent < 0)
             throw new Error('rgb, to: percent arg must be between 0 and 100 (0 and 100 include)');
-        var res = rgb.config.overwriteColor ? this : new rgb.copy(this);
+        var res = rgb.config.overwriteColor ? this : rgb.copy(this);
         var toRed = color.red - res.red;
         var toGreen = color.green - res.green;
         var toBlue = color.blue - res.blue;
@@ -230,116 +355,13 @@ var rgb = /** @class */ (function () {
         return res;
     };
     /**
-     *  @class
-     *  @constructor
-     *  @param {Number} [red] - La valeur de rouge dans la couleur. Si non préciser prend la valeur defini dans rgb.config.defaultColor.red.
-     *  @param {Number} [green] - La valeur de vert dans la couleur. Si non préciser prend la valeur defini dans rgb.config.defaultColor.green.
-     *  @param {Number} [blue] - La valeur de bleu dans la couleur. Si non préciser prend la valeur defini dans rgb.config.defaultColor.blue.
-     *  @param {Number} [alpha] - La tansparance de la couleur, valeur entre 0 et 1. Si non préciser prend la valeur defini dans rgb.config.defaultAlpha.
+     * equivalent a rgb.copy: clone une couleur.
+     * @param {Boolean} [alpha = true] - boolean disant si la fonction doit aussi copié l'aplha de la couleure
      */
-    rgb.random = /** @class */ (function () {
-        /**
-         * @class rgb.random creé une couleure aleatoire.
-         * @constructor
-         * @param {boolean} [alph = false] - si true genere une couleure aleatoire avec un alpha aleatoire, si false genere une couleur avec 1 comme alpha.
-         * @returns {rgb}
-         */
-        function class_1(alpha) {
-            if (alpha === void 0) { alpha = false; }
-            var c = new rgb();
-            c.red = Math.floor(Math.random() * ((255 - 0) + 1) + 0);
-            c.green = Math.floor(Math.random() * ((255 - 0) + 1) + 0);
-            c.blue = Math.floor(Math.random() * ((255 - 0) + 1) + 0);
-            if (alpha) {
-                c.alpha = Math.floor(Math.random() * ((100 - 0) + 1) + 0) / 100;
-            }
-            return c;
-        }
-        return class_1;
-    }());
-    rgb.red = /** @class */ (function () {
-        /**
-         * @class rgb.red crée une couleure rouge
-         * @constructor
-         * @returns {rgb}
-         */
-        function class_2() {
-            return new rgb(255, 0, 0);
-        }
-        return class_2;
-    }());
-    rgb.green = /** @class */ (function () {
-        /**
-         * @class rgb.green crée une couleure verte
-         * @constructor
-         * @returns {rgb}
-         */
-        function class_3() {
-            return new rgb(0, 255, 0);
-        }
-        return class_3;
-    }());
-    /**
-     * @class rgb.blue crée une couleure bleu
-     * @constructor new rgb.blue
-     * @returns {rgb}
-     */
-    rgb.blue = /** @class */ (function () {
-        function class_4() {
-            return new rgb(0, 0, 255);
-        }
-        return class_4;
-    }());
-    rgb.black = /** @class */ (function () {
-        /**
-         * @class rgb.black crée une couleure noire
-         * @constructor
-         * @returns {rgb}
-         */
-        function class_5() {
-            return new rgb();
-        }
-        return class_5;
-    }());
-    rgb.white = /** @class */ (function () {
-        /**
-         * @class rgb.white crée une couleure blanche
-         * @constructor
-         * @returns {rgb}
-         */
-        function class_6() {
-            return new rgb().invert();
-        }
-        return class_6;
-    }());
-    rgb.grey = /** @class */ (function () {
-        /**
-         * @class rgb.grey crée une couleure grise
-         * @constructor
-         * @returns {rgb}
-         */
-        function class_7(g) {
-            if (g === void 0) { g = 122.5; }
-            return new rgb(g, g, g);
-        }
-        return class_7;
-    }());
-    rgb.copy = /** @class */ (function () {
-        /**
-         * @class rgb.copy copie une couleure
-         * @constructor
-         * @returns {rgb}
-         */
-        function class_8(c, alpha) {
-            if (alpha === void 0) { alpha = true; }
-            var res = new rgb(c.red, c.green, c.blue);
-            if (alpha) {
-                res.alpha = c.alpha;
-            }
-            return res;
-        }
-        return class_8;
-    }());
+    rgb.prototype.clone = function (alpha) {
+        if (alpha === void 0) { alpha = true; }
+        return rgb.copy(this, alpha);
+    };
     rgb.config = {
         warn: true,
         defaultColor: {
@@ -363,9 +385,3 @@ var rgb = /** @class */ (function () {
     };
     return rgb;
 }());
-function loc(c) {
-    return "color:" + c + ";";
-}
-function bloc(c) {
-    return "background-color: " + rgb.config.codeLogColor.bg + ";color: " + c + ";";
-}

@@ -474,17 +474,31 @@ interface GameMovingElemementStyleInterface<T extends "rectangle" | "sprites" | 
 
 class GameMovingElement extends GameElemement {
     movingStyle :GameMovingElemementStyleInterface<"sprites" | "rectangle" | "path">;
-    sprites :HTMLImageElement[] = [];
-    deathSprites :HTMLImageElement[] = [];
-    lastAnimFrame :Date | null = null;
+    sprites :HTMLImageElement[] | null = null;
+    deathSprites :HTMLImageElement[] | null = null;
+    lastAnimeFrame :Date | null = null;
     animeFrame :number = 0;
     maxAnimeFrame :number = 0.
     _sprite :HTMLImageElement = new Image();
+    isAlive :boolean = true;
     static maxAnimeTime :number = 10000;
 
     constructor(width :number, height :number, x :number, y :number, style :GameMovingElemementStyleInterface<"path" | "rectangle" | "sprites">, fx :number = 0, fy :number = 0, life :number = 1, showHitBox :boolean = false, hitBoxColor : rgb = rgb.random()) {
         super(width, height, x, y, life, {type: 'rectangle', color: 'black'}, fx, fy, false, showHitBox, hitBoxColor);
         this.movingStyle = style;
+        if (this.movingStyle.type === 'sprites') {
+            this.sprites = [];
+            if(this.movingStyle.spritesPath === undefined) throw new TypeError('GameMovingElement, spritesPath must be defined if type is sprites');
+            for(let i of this.movingStyle.spritesPath) {
+                this.sprites.push(pathToImage(i));
+            }
+            if (this.movingStyle.onDeathSpritesPath !== undefined) {
+                this.deathSprites = [];
+                for(let i of this.movingStyle.onDeathSpritesPath) {
+                    this.deathSprites.push(pathToImage(i));
+                }
+            }
+        }
     }
     draw(ctx :CanvasRenderingContext2D) {
         if (this.showHitBox) {
@@ -544,6 +558,35 @@ class GameMovingElement extends GameElemement {
                 ctx.drawImage(this._sprite, this.x, this.y);
             }
         }
+    }
+
+    anime() {
+        if (this.movingStyle.type !== 'sprites') return;
+        if (this.sprites === null) return;
+        if (this.lastAnimeFrame instanceof Date) {
+            let len = 1;
+            if (this.isAlive) len = this.sprites.length;
+            else if(this.deathSprites !== null) len = this.deathSprites.length;
+            if (this.movingStyle.animeTime === undefined) this.movingStyle.animeTime = 100;
+            let time :number = this.movingStyle.animeTime;
+            if (new Date().getTime() - this.lastAnimeFrame.getTime() < time) return;
+        }
+        if (this.isAlive) this._sprite = this.sprites[this.animeFrame];
+        else if (this.deathSprites !== null) this._sprite = this.deathSprites[this.animeFrame];
+        else this._sprite = new Image();
+        if (this.isAlive) this.maxAnimeFrame = this.sprites.length - 1;
+        else if (this.deathSprites !== null) this.maxAnimeFrame = this.deathSprites.length - 1;
+        else this.maxAnimeFrame = 0;
+        this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
+        this.lastAnimeFrame = new Date();
+    }
+
+    kill() {
+        this.life = 0;
+        this.isAlive = false;
+        this.lastAnimeFrame = null;
+        this.animeFrame = 0;
+        this.anime();
     }
 }
 

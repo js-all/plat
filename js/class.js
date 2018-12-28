@@ -478,13 +478,30 @@ var GameMovingElement = /** @class */ (function (_super) {
         if (showHitBox === void 0) { showHitBox = false; }
         if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
         var _this = _super.call(this, width, height, x, y, life, { type: 'rectangle', color: 'black' }, fx, fy, false, showHitBox, hitBoxColor) || this;
-        _this.sprites = [];
-        _this.deathSprites = [];
-        _this.lastAnimFrame = null;
+        _this.sprites = null;
+        _this.deathSprites = null;
+        _this.lastAnimeFrame = null;
         _this.animeFrame = 0;
         _this.maxAnimeFrame = 0.;
         _this._sprite = new Image();
+        _this.isAlive = true;
         _this.movingStyle = style;
+        if (_this.movingStyle.type === 'sprites') {
+            _this.sprites = [];
+            if (_this.movingStyle.spritesPath === undefined)
+                throw new TypeError('GameMovingElement, spritesPath must be defined if type is sprites');
+            for (var _i = 0, _a = _this.movingStyle.spritesPath; _i < _a.length; _i++) {
+                var i = _a[_i];
+                _this.sprites.push(pathToImage(i));
+            }
+            if (_this.movingStyle.onDeathSpritesPath !== undefined) {
+                _this.deathSprites = [];
+                for (var _b = 0, _c = _this.movingStyle.onDeathSpritesPath; _b < _c.length; _b++) {
+                    var i = _c[_b];
+                    _this.deathSprites.push(pathToImage(i));
+                }
+            }
+        }
         return _this;
     }
     GameMovingElement.prototype.draw = function (ctx) {
@@ -552,6 +569,45 @@ var GameMovingElement = /** @class */ (function (_super) {
                 ctx.drawImage(this._sprite, this.x, this.y);
             }
         }
+    };
+    GameMovingElement.prototype.anime = function () {
+        if (this.movingStyle.type !== 'sprites')
+            return;
+        if (this.sprites === null)
+            return;
+        if (this.lastAnimeFrame instanceof Date) {
+            var len = 1;
+            if (this.isAlive)
+                len = this.sprites.length;
+            else if (this.deathSprites !== null)
+                len = this.deathSprites.length;
+            if (this.movingStyle.animeTime === undefined)
+                this.movingStyle.animeTime = 100;
+            var time = this.movingStyle.animeTime;
+            if (new Date().getTime() - this.lastAnimeFrame.getTime() < time)
+                return;
+        }
+        if (this.isAlive)
+            this._sprite = this.sprites[this.animeFrame];
+        else if (this.deathSprites !== null)
+            this._sprite = this.deathSprites[this.animeFrame];
+        else
+            this._sprite = new Image();
+        if (this.isAlive)
+            this.maxAnimeFrame = this.sprites.length - 1;
+        else if (this.deathSprites !== null)
+            this.maxAnimeFrame = this.deathSprites.length - 1;
+        else
+            this.maxAnimeFrame = 0;
+        this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
+        this.lastAnimeFrame = new Date();
+    };
+    GameMovingElement.prototype.kill = function () {
+        this.life = 0;
+        this.isAlive = false;
+        this.lastAnimeFrame = null;
+        this.animeFrame = 0;
+        this.anime();
     };
     GameMovingElement.maxAnimeTime = 10000;
     return GameMovingElement;

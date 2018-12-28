@@ -469,6 +469,93 @@ var GameEntity = /** @class */ (function (_super) {
     GameEntity.maxAnimeTime = 10000;
     return GameEntity;
 }(GameElemement));
+var GameMovingElement = /** @class */ (function (_super) {
+    __extends(GameMovingElement, _super);
+    function GameMovingElement(width, height, x, y, style, fx, fy, life, showHitBox, hitBoxColor) {
+        if (fx === void 0) { fx = 0; }
+        if (fy === void 0) { fy = 0; }
+        if (life === void 0) { life = 1; }
+        if (showHitBox === void 0) { showHitBox = false; }
+        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
+        var _this = _super.call(this, width, height, x, y, life, { type: 'rectangle', color: 'black' }, fx, fy, false, showHitBox, hitBoxColor) || this;
+        _this.sprites = [];
+        _this.deathSprites = [];
+        _this.lastAnimFrame = null;
+        _this.animeFrame = 0;
+        _this.maxAnimeFrame = 0.;
+        _this._sprite = new Image();
+        _this.movingStyle = style;
+        return _this;
+    }
+    GameMovingElement.prototype.draw = function (ctx) {
+        if (this.showHitBox) {
+            ctx.save();
+            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.restore();
+        }
+        if (this.movingStyle.type === 'rectangle') {
+            var color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+        else if (this.movingStyle.type === 'path') {
+            var color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            var points = [];
+            var temp_points = this.movingStyle.points;
+            for (var _i = 0, temp_points_2 = temp_points; _i < temp_points_2.length; _i++) {
+                var i = temp_points_2[_i];
+                var temp_array = [0, 0];
+                temp_array[0] = ((i[0] / 100) * this.width) + this.x;
+                temp_array[1] = ((i[1] / 100) * this.height) + this.y;
+                points.push(temp_array);
+            }
+            var p = points;
+            ctx.beginPath();
+            ctx.moveTo.apply(ctx, p[0]);
+            ctx.lineTo.apply(ctx, p[0]);
+            for (var _a = 0, p_2 = p; _a < p_2.length; _a++) {
+                var i = p_2[_a];
+                ctx.lineTo.apply(ctx, i);
+            }
+            var closePath = this.movingStyle.closePath === undefined ? true : this.movingStyle.closePath;
+            if (closePath)
+                ctx.lineTo.apply(ctx, p[0]);
+            ctx.stroke();
+            var fill = this.movingStyle.fill === undefined ? false : this.movingStyle.fill;
+            if (fill)
+                ctx.fill();
+            ctx.closePath();
+            var showPoints = this.movingStyle.showPoints === undefined ? false : this.movingStyle.showPoints;
+            if (showPoints) {
+                for (var i = 0; i < p.length; i++) {
+                    var e = p[i];
+                    var color_2 = 'hsl(' + (i * (255 / p.length)) + ', 100%, 50%)';
+                    ctx.fillStyle = color_2;
+                    ctx.beginPath();
+                    ctx.arc(e[0], e[1], 5, 0, Math.PI * 2);
+                    ctx.font = '15px Arial';
+                    ctx.fill();
+                    ctx.fillStyle = 'black';
+                    ctx.fillText((i + 1).toString(), e[0] - 5, e[1] - 7);
+                    ctx.closePath();
+                }
+            }
+        }
+        else if (this.movingStyle.type === 'sprites') {
+            if (this.movingStyle.resiveSprites || false) {
+                ctx.drawImage(this._sprite, this.x, this.y, this.width, this.height);
+            }
+            else {
+                ctx.drawImage(this._sprite, this.x, this.y);
+            }
+        }
+    };
+    GameMovingElement.maxAnimeTime = 10000;
+    return GameMovingElement;
+}(GameElemement));
 var Player = /** @class */ (function (_super) {
     __extends(Player, _super);
     function Player(x, y, showHitBox, hitBoxColor) {

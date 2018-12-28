@@ -459,6 +459,94 @@ class GameEntity extends GameElemement {
     }
 }
 
+interface GameMovingElemementStyleInterface<T extends "rectangle" | "sprites" | "path"> {
+    type: T,
+    points?: T extends "path" ? Array<[number, number]> : undefined,
+    color?: T extends "path" | "rectangle" ? string | rgb : undefined,
+    fill?: T extends "path" ? boolean : undefined,
+    spritesPath?: T extends "sprites" ? string[] : undefined,
+    onDeathSpritesPath? : T extends "sprites" ? string[] : undefined,
+    resiveSprites?: T extends "sprites" ? boolean : undefined,
+    animeTime? : T extends "sprites" ? number : undefined,
+    showPoints?: T extends "path" ? boolean : undefined,
+    closePath?: T extends "path" ? boolean : undefined
+}
+
+class GameMovingElement extends GameElemement {
+    movingStyle :GameMovingElemementStyleInterface<"sprites" | "rectangle" | "path">;
+    sprites :HTMLImageElement[] = [];
+    deathSprites :HTMLImageElement[] = [];
+    lastAnimFrame :Date | null = null;
+    animeFrame :number = 0;
+    maxAnimeFrame :number = 0.
+    _sprite :HTMLImageElement = new Image();
+    static maxAnimeTime :number = 10000;
+
+    constructor(width :number, height :number, x :number, y :number, style :GameMovingElemementStyleInterface<"path" | "rectangle" | "sprites">, fx :number = 0, fy :number = 0, life :number = 1, showHitBox :boolean = false, hitBoxColor : rgb = rgb.random()) {
+        super(width, height, x, y, life, {type: 'rectangle', color: 'black'}, fx, fy, false, showHitBox, hitBoxColor);
+        this.movingStyle = style;
+    }
+    draw(ctx :CanvasRenderingContext2D) {
+        if (this.showHitBox) {
+            ctx.save();
+            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.restore();
+        }
+        if (this.movingStyle.type === 'rectangle') {
+            let color: string = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height)
+        }  else if (this.movingStyle.type === 'path') {
+            let color: string = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            let points: Array<[number, number]> = [];
+            let temp_points: Array<[number, number]> = <Array<[number, number]>>this.movingStyle.points;
+            for (let i of temp_points) {
+                let temp_array: [number, number] = [0, 0];
+                temp_array[0] = ((i[0] / 100) * this.width) + this.x;
+                temp_array[1] = ((i[1] / 100) * this.height) + this.y;
+                points.push(temp_array);
+            }
+            let p: Array<[number, number]> = points;
+            ctx.beginPath()
+            ctx.moveTo(...p[0]);
+            ctx.lineTo(...p[0]);
+            for (let i of p) {
+                ctx.lineTo(...i);
+            }
+            let closePath = this.movingStyle.closePath === undefined ? true : this.movingStyle.closePath;
+            if (closePath) ctx.lineTo(...p[0]);
+            ctx.stroke();
+            let fill: boolean = this.movingStyle.fill === undefined ? false : this.movingStyle.fill;
+            if (fill) ctx.fill()
+            ctx.closePath();
+            let showPoints = this.movingStyle.showPoints === undefined ? false : this.movingStyle.showPoints;
+            if (showPoints) {
+                for (let i = 0; i < p.length; i++) {
+                    const e = p[i];
+                    const color = 'hsl(' + (i * (255 / p.length)) + ', 100%, 50%)'
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(e[0], e[1], 5, 0, Math.PI * 2);
+                    ctx.font = '15px Arial';
+                    ctx.fill();
+                    ctx.fillStyle = 'black'
+                    ctx.fillText((i + 1).toString(), e[0] - 5, e[1] - 7);
+                    ctx.closePath();
+                }
+            }
+        } else if(this.movingStyle.type === 'sprites') {
+            if(this.movingStyle.resiveSprites || false) {
+                ctx.drawImage(this._sprite, this.x, this.y, this.width, this.height);
+            } else {
+                ctx.drawImage(this._sprite, this.x, this.y);
+            }
+        }
+    }
+}
+
 class Player extends GameEntity {
     constructor(x: number, y: number, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random()) {
         super(68.75, 93.75, x, y, 10, {

@@ -13,7 +13,7 @@ function pathToImage(path: string): HTMLImageElement {
  */
 function rotateImageOnYaxis(img: HTMLImageElement): HTMLImageElement {
     let cnv = document.createElement('canvas');
-    cnv.style.display = 'none';
+    //cnv.style.display = 'none';
     document.body.appendChild(cnv)
     let c = <CanvasRenderingContext2D>cnv.getContext('2d');
     cnv.width = img.width;

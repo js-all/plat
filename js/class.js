@@ -5,22 +5,35 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+//interface pour les style des elements
+var log = console.log;
+var Face;
+(function (Face) {
+    Face[Face["top"] = 0] = "top";
+    Face[Face["left"] = 1] = "left";
+    Face[Face["right"] = 2] = "right";
+    Face[Face["bottom"] = 3] = "bottom";
+})(Face || (Face = {}));
 /**
- * @class - les elements du jeu
+ * @class les elements du jeu
  */
 var GameElemement = /** @class */ (function () {
-    function GameElemement(width, height, x, y, life, style, fx, fy, onDamage, onDeath) {
+    function GameElemement(width, height, x, y, life, style, fx, fy, collision, showHitBox, hitBoxColor, onDamage, onDeath) {
         if (fx === void 0) { fx = 0; }
         if (fy === void 0) { fy = 0; }
+        if (collision === void 0) { collision = false; }
+        if (showHitBox === void 0) { showHitBox = false; }
+        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
         if (onDamage === void 0) { onDamage = function () { }; }
         if (onDeath === void 0) { onDeath = function () { }; }
+        this.collision = false;
         //definition des proprierter et verrification de type et de valeur si besoin
         this.width = width;
         this.height = height;
@@ -29,6 +42,11 @@ var GameElemement = /** @class */ (function () {
         this.life = life;
         this.maxLife = life;
         this.style = style;
+        this.showHitBox = showHitBox;
+        this.hitBoxColor = hitBoxColor;
+        this.collision = collision;
+        if (collision)
+            CollisionObjects.push(this);
         if ((this.style.type === 'rectangle' || this.style.type === 'path') && this.style.color === undefined)
             throw new TypeError('GameElement, you must provide a color in style if you use a rectangle or path style type');
         if ((this.style.type === 'image') && this.style.IMGPath === undefined)
@@ -53,6 +71,12 @@ var GameElemement = /** @class */ (function () {
      */
     GameElemement.prototype.draw = function (ctx) {
         //si son type de style est un rectangle
+        if (this.showHitBox) {
+            ctx.save();
+            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.restore();
+        }
         if (this.style.type === 'rectangle') {
             var color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
             ctx.fillStyle = color;
@@ -118,17 +142,48 @@ var GameElemement = /** @class */ (function () {
         this.x += this.fx;
         this.y += this.fy;
     };
-    GameElemement.prototype.touch = function (gameElement) {
+    GameElemement.prototype.touch = function (gameElement, detail) {
         var X = false;
         var Y = false;
-        if (gameElement.x <= this.width + this.x && gameElement.x >= this.x)
+        if (gameElement.x <= this.width + this.x && gameElement.x + gameElement.width >= this.x)
             X = true;
         if (gameElement.y <= this.height + this.y && gameElement.y + gameElement.height >= this.y)
             Y = true;
-        return X && Y;
+        if (detail) {
+            var face = Face.top;
+            var superposed = (this.x === gameElement.x + gameElement.width || this.x + this.width === gameElement.x || this.y === gameElement.y + gameElement.height || this.y + this.height === gameElement.y);
+            superposed = superposed ? false : true;
+            var collideLarg = (gameElement.x + gameElement.width <= this.width + this.x ? gameElement.width + gameElement.x : this.x + this.width) - (gameElement.x >= this.x ? gameElement.x : this.x);
+            var collideLong = (gameElement.y + gameElement.height <= this.y + this.height ? gameElement.y + gameElement.height : this.y + this.height) - (gameElement.y >= this.y ? gameElement.y : this.y);
+            if (collideLarg >= collideLong) {
+                if (this.y + (this.height / 2) <= gameElement.y + (gameElement.height / 2)) {
+                    face = Face.top;
+                }
+                else {
+                    face = Face.bottom;
+                }
+            }
+            else if (collideLong > collideLarg) {
+                if (this.x + (this.width / 2) <= gameElement.x + (gameElement.width / 2)) {
+                    face = Face.left;
+                }
+                else {
+                    face = Face.right;
+                }
+            }
+            var res_1 = {
+                res: X && Y,
+                face: face,
+                superposed: superposed
+            };
+            return res_1;
+        }
+        var res = X && Y;
+        return res;
     };
     return GameElemement;
 }());
+var CollisionObjects = [];
 var Orientation;
 (function (Orientation) {
     Orientation[Orientation["left"] = 0] = "left";
@@ -143,18 +198,24 @@ var Actions;
 })(Actions || (Actions = {}));
 var GameEntity = /** @class */ (function (_super) {
     __extends(GameEntity, _super);
-    function GameEntity(width, height, x, y, life, sprites, fx, fy, orientation, onDamage, onDeath) {
+    function GameEntity(width, height, x, y, life, sprites, fx, fy, orientation, showHitBox, hitBoxColor, onDamage, onDeath) {
         if (fx === void 0) { fx = 0; }
         if (fy === void 0) { fy = 0; }
         if (orientation === void 0) { orientation = Orientation.right; }
+        if (showHitBox === void 0) { showHitBox = false; }
+        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
         if (onDamage === void 0) { onDamage = function () { }; }
         if (onDeath === void 0) { onDeath = function () { }; }
         var _this = _super.call(this, width, height, x, y, life, {
             type: 'image',
             IMGPath: ''
-        }, fx, fy, onDamage, onDeath) || this;
+        }, fx, fy, false, showHitBox, hitBoxColor, onDamage, onDeath) || this;
         _this.animeFrame = 0;
         _this.maxAnimeFrame = 0;
+        _this.lastAnimeFrame = null;
+        _this.fj = 0;
+        _this.isJumping = false;
+        _this.gravity = 0;
         _this.orientation = orientation;
         _this.isWalking = false;
         var walkingSprites = {
@@ -180,7 +241,7 @@ var GameEntity = /** @class */ (function (_super) {
             walkingSprites.left.push(imgL);
             walkingSprites.right.push(imgR);
         }
-        var walkingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.walking.animeTime);
+        var walkingSpritesTime = Math.round((walkingSprites.right.length / sprites.walking.animeTime) * GameEntity.maxAnimeTime);
         for (var i = 1; i < walkingSpritesTime; i++) {
             walkingSprites.left.push(walkingSprites.left[i - 1]);
             walkingSprites.right.push(walkingSprites.right[i - 1]);
@@ -192,7 +253,7 @@ var GameEntity = /** @class */ (function (_super) {
             jumpingSprites.left.push(imgL);
             jumpingSprites.right.push(imgR);
         }
-        var jumpingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.jumping.animeTime);
+        var jumpingSpritesTime = Math.round((jumpingSprites.right.length / sprites.jumping.animeTime) * GameEntity.maxAnimeTime);
         for (var i = 1; i < jumpingSpritesTime; i++) {
             jumpingSprites.left.push(jumpingSprites.left[i - 1]);
             jumpingSprites.right.push(jumpingSprites.right[i - 1]);
@@ -204,7 +265,7 @@ var GameEntity = /** @class */ (function (_super) {
             attackingSprites.left.push(imgL);
             attackingSprites.right.push(imgR);
         }
-        var attackingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.attacking.animeTime);
+        var attackingSpritesTime = Math.round((attackingSprites.right.length / sprites.attacking.animeTime) * GameEntity.maxAnimeTime);
         for (var i = 1; i < attackingSpritesTime; i++) {
             attackingSprites.left.push(attackingSprites.left[i - 1]);
             attackingSprites.right.push(attackingSprites.right[i - 1]);
@@ -216,7 +277,7 @@ var GameEntity = /** @class */ (function (_super) {
             nothingSprites.left.push(imgL);
             nothingSprites.right.push(imgR);
         }
-        var nothingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.nothing.animeTime);
+        var nothingSpritesTime = Math.round((nothingSprites.right.length / sprites.nothing.animeTime) * GameEntity.maxAnimeTime);
         for (var i = 1; i < nothingSpritesTime; i++) {
             nothingSprites.left.push(nothingSprites.left[i - 1]);
             nothingSprites.right.push(nothingSprites.right[i - 1]);
@@ -241,12 +302,9 @@ var GameEntity = /** @class */ (function (_super) {
         };
         _this.action = Actions.nothing;
         _this._sprite = new Image();
+        _this.anime();
         return _this;
     }
-    GameEntity.prototype.move = function () {
-        this.x += this.fx;
-        this.y += this.fy;
-    };
     Object.defineProperty(GameEntity.prototype, "sprite", {
         get: function () {
             return this._sprite;
@@ -261,8 +319,29 @@ var GameEntity = /** @class */ (function (_super) {
     GameEntity.prototype.setAction = function (action) {
         this.action = action;
         this.animeFrame = 0;
+        this.lastAnimeFrame = null;
     };
     GameEntity.prototype.anime = function () {
+        if (this.lastAnimeFrame instanceof Date) {
+            var len = 1;
+            switch (this.action) {
+                case Actions.nothing:
+                    len = this.sprites.nothing.sprites.right.length;
+                    break;
+                case Actions.walking:
+                    len = this.sprites.walking.sprites.right.length;
+                    break;
+                case Actions.attacking:
+                    len = this.sprites.attacking.sprites.right.length;
+                    break;
+                case Actions.jumping:
+                    len = this.sprites.jumping.sprites.right.length;
+                    break;
+            }
+            var time = GameEntity.maxAnimeTime / len;
+            if (new Date().getTime() - this.lastAnimeFrame.getTime() < time)
+                return;
+        }
         if (this.action === Actions.attacking) {
             if (this.orientation === Orientation.left)
                 this.sprite = this.sprites.attacking.sprites.left[this.animeFrame];
@@ -287,8 +366,139 @@ var GameEntity = /** @class */ (function (_super) {
             else if (this.orientation === Orientation.right)
                 this.sprite = this.sprites.nothing.sprites.right[this.animeFrame];
         }
-        this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 0 : this.animeFrame + 1;
+        switch (this.action) {
+            case Actions.nothing:
+                this.maxAnimeFrame = this.sprites.nothing.sprites.right.length - 1;
+                break;
+            case Actions.walking:
+                this.maxAnimeFrame = this.sprites.walking.sprites.right.length - 1;
+                break;
+            case Actions.attacking:
+                this.maxAnimeFrame = this.sprites.attacking.sprites.right.length - 1;
+                break;
+            case Actions.jumping:
+                this.maxAnimeFrame = this.sprites.jumping.sprites.right.length - 1;
+                break;
+        }
+        this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
+        this.lastAnimeFrame = new Date();
+    };
+    GameEntity.prototype.jump = function (power) {
+        if (power === void 0) { power = 50; }
+        this.fj = Math.abs(power);
+        this.isJumping = true;
+    };
+    GameEntity.prototype.move = function () {
+        var nfy = 25;
+        var ngr = 1;
+        var collisions = [];
+        for (var _i = 0, CollisionObjects_1 = CollisionObjects; _i < CollisionObjects_1.length; _i++) {
+            var c = CollisionObjects_1[_i];
+            collisions.push(this.touch(c, true));
+        }
+        var touchGround = false;
+        for (var _a = 0, collisions_1 = collisions; _a < collisions_1.length; _a++) {
+            var c = collisions_1[_a];
+            if (c.res && c.face === Face.top)
+                touchGround = true;
+        }
+        this.y += this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
+        this.x += this.fx;
+        collisions = [];
+        for (var _b = 0, CollisionObjects_2 = CollisionObjects; _b < CollisionObjects_2.length; _b++) {
+            var c = CollisionObjects_2[_b];
+            collisions.push(this.touch(c, true));
+        }
+        for (var _c = 0, collisions_2 = collisions; _c < collisions_2.length; _c++) {
+            var c = collisions_2[_c];
+            if (c.res && c.face === Face.left && c.superposed) {
+                this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
+            }
+            else if (c.res && c.face === Face.right && c.superposed) {
+                this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
+            }
+            else if (c.res && c.face === Face.top && c.superposed) {
+                this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
+            }
+        }
+        touchGround = false;
+        for (var _d = 0, collisions_3 = collisions; _d < collisions_3.length; _d++) {
+            var c = collisions_3[_d];
+            if (c.res && c.face === Face.top)
+                touchGround = true;
+        }
+        if (this.fj > 0) {
+            this.fj -= this.gravity;
+            this.gravity += 1;
+            for (var _e = 0, collisions_4 = collisions; _e < collisions_4.length; _e++) {
+                var c = collisions_4[_e];
+                if (c.res && c.face === Face.bottom && c.superposed) {
+                    this.fj = -1;
+                    this.y = CollisionObjects[collisions.indexOf(c)].y + CollisionObjects[collisions.indexOf(c)].height;
+                }
+            }
+            if (this.fj < 0) {
+                this.fj = 0;
+                this.fy = 0;
+                this.gravity = ngr;
+            }
+        }
+        else {
+            if (!touchGround) {
+                this.fy += this.gravity;
+                this.gravity += 1;
+            }
+            else {
+                this.fy = nfy;
+                this.gravity = ngr;
+            }
+        }
+        for (var _f = 0, collisions_5 = collisions; _f < collisions_5.length; _f++) {
+            var c = collisions_5[_f];
+            if (c.res && c.face === Face.top)
+                touchGround = true;
+        }
+        if (touchGround) {
+            this.isJumping = false;
+        }
     };
     GameEntity.maxAnimeTime = 10000;
     return GameEntity;
 }(GameElemement));
+var Player = /** @class */ (function (_super) {
+    __extends(Player, _super);
+    function Player(x, y, showHitBox, hitBoxColor) {
+        if (showHitBox === void 0) { showHitBox = false; }
+        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
+        return _super.call(this, 100, 100, x, y, 10, {
+            walking: {
+                spritesPath: [
+                    "./images/sprites/player/walk/0.png",
+                    "./images/sprites/player/walk/1.png",
+                    "./images/sprites/player/walk/2.png",
+                    "./images/sprites/player/walk/3.png"
+                ],
+                animeTime: 1000
+            },
+            jumping: {
+                spritesPath: [
+                    "./images/sprites/player/jump/0.png"
+                ],
+                animeTime: 1000
+            },
+            attacking: {
+                spritesPath: [
+                    "./images/sprites/player/attack/0.png"
+                ],
+                animeTime: 1000
+            },
+            nothing: {
+                spritesPath: [
+                    "./images/sprites/player/nothing/0.png"
+                ],
+                animeTime: 1000
+            }
+        }, 0, 0, Orientation.right, showHitBox, hitBoxColor) || this;
+    }
+    return Player;
+}(GameEntity));

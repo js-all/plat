@@ -14,7 +14,7 @@ function pathToImage(path) {
  */
 function rotateImageOnYaxis(img) {
     var cnv = document.createElement('canvas');
-    cnv.style.display = 'none';
+    //cnv.style.display = 'none';
     document.body.appendChild(cnv);
     var c = cnv.getContext('2d');
     cnv.width = img.width;

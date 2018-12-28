@@ -24,8 +24,8 @@ var Face;
 /**
  * @class les elements du jeu
  */
-var GameElemement = /** @class */ (function () {
-    function GameElemement(width, height, x, y, life, style, fx, fy, collision, showHitBox, hitBoxColor, onDamage, onDeath) {
+var GameElement = /** @class */ (function () {
+    function GameElement(width, height, x, y, life, style, fx, fy, collision, showHitBox, hitBoxColor, onDamage, onDeath) {
         if (fx === void 0) { fx = 0; }
         if (fy === void 0) { fy = 0; }
         if (collision === void 0) { collision = false; }
@@ -69,7 +69,7 @@ var GameElemement = /** @class */ (function () {
      * dessine l'element
      * @param ctx - le context sur lequel dessiner.
      */
-    GameElemement.prototype.draw = function (ctx) {
+    GameElement.prototype.draw = function (ctx) {
         //si son type de style est un rectangle
         if (this.showHitBox) {
             ctx.save();
@@ -138,14 +138,14 @@ var GameElemement = /** @class */ (function () {
             }
         }
     };
-    GameElemement.prototype.move = function () {
+    GameElement.prototype.move = function () {
         this.x += this.fx;
         this.y += this.fy;
     };
-    GameElemement.prototype.touch = function (gameElement, detail) {
-        return GameElemement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
+    GameElement.prototype.touch = function (gameElement, detail) {
+        return GameElement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
     };
-    GameElemement.touch = function (width, height, x, y, gWidth, gHeight, gX, gY, detail) {
+    GameElement.touch = function (width, height, x, y, gWidth, gHeight, gX, gY, detail) {
         var X = false;
         var Y = false;
         if (gX <= width + x && gX + gWidth >= x)
@@ -184,7 +184,7 @@ var GameElemement = /** @class */ (function () {
         var res = X && Y;
         return res;
     };
-    return GameElemement;
+    return GameElement;
 }());
 var CollisionObjects = [];
 var Orientation;
@@ -410,31 +410,47 @@ var GameEntity = /** @class */ (function (_super) {
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
-        for (var i = 0; i < this.fy; i++) {
-            var r = this.fx / this.fy;
-        }
-        this.y += this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
-        this.x += this.fx;
+        var ffx = null;
+        var ffy = null;
+        var fff = false;
+        /*for(let i = 0;i < this.fy;i++) {
+            let r = this.fx / this.fy;
+            let t :detailTouchInterface = {
+                res: false,
+                superposed: false,
+                face : Face.bottom
+            };
+            for(let c of CollisionObjects) {
+                t = GameElement.touch(this.width, this.height, this.x + i * r, this.y + i, c.width, c.height, c.x, c.y, true);
+                if (t.res && !t.superposed) break;
+            }
+
+            if (t.res && !t.superposed) {
+                ffx = i*r;
+                ffy = i;
+                fff = true;
+                break;
+            }
+        }*/
+        this.y += fff && ffy !== null ? ffy : this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
+        this.x += fff && ffx !== null ? ffx : this.fx;
         collisions = [];
         for (var _b = 0, CollisionObjects_2 = CollisionObjects; _b < CollisionObjects_2.length; _b++) {
             var c = CollisionObjects_2[_b];
             collisions.push(this.touch(c, true));
         }
-        for (var _c = 0, collisions_2 = collisions; _c < collisions_2.length; _c++) {
-            var c = collisions_2[_c];
+        for (let c of collisions) {
             if (c.res && c.face === Face.left && c.superposed) {
                 this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
-            }
-            else if (c.res && c.face === Face.right && c.superposed) {
+            } else if (c.res && c.face === Face.right && c.superposed) {
                 this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
-            }
-            else if (c.res && c.face === Face.top && c.superposed) {
+            } else if (c.res && c.face === Face.top && c.superposed) {
                 this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
             }
         }
         touchGround = false;
-        for (var _d = 0, collisions_3 = collisions; _d < collisions_3.length; _d++) {
-            var c = collisions_3[_d];
+        for (var _c = 0, collisions_2 = collisions; _c < collisions_2.length; _c++) {
+            var c = collisions_2[_c];
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
@@ -443,8 +459,8 @@ var GameEntity = /** @class */ (function (_super) {
         if (this.fj > 0) {
             this.fj -= this.gravity;
             this.gravity += 1;
-            for (var _e = 0, collisions_4 = collisions; _e < collisions_4.length; _e++) {
-                var c = collisions_4[_e];
+            for (var _d = 0, collisions_3 = collisions; _d < collisions_3.length; _d++) {
+                var c = collisions_3[_d];
                 if (c.res && c.face === Face.bottom && c.superposed) {
                     this.fj = -1;
                     this.y = CollisionObjects[collisions.indexOf(c)].y + CollisionObjects[collisions.indexOf(c)].height;
@@ -466,8 +482,8 @@ var GameEntity = /** @class */ (function (_super) {
                 this.gravity = ngr;
             }
         }
-        for (var _f = 0, collisions_5 = collisions; _f < collisions_5.length; _f++) {
-            var c = collisions_5[_f];
+        for (var _e = 0, collisions_4 = collisions; _e < collisions_4.length; _e++) {
+            var c = collisions_4[_e];
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
@@ -477,7 +493,7 @@ var GameEntity = /** @class */ (function (_super) {
     };
     GameEntity.maxAnimeTime = 10000;
     return GameEntity;
-}(GameElemement));
+}(GameElement));
 var GameMovingElement = /** @class */ (function (_super) {
     __extends(GameMovingElement, _super);
     function GameMovingElement(width, height, x, y, style, fx, fy, life, showHitBox, hitBoxColor) {
@@ -620,7 +636,7 @@ var GameMovingElement = /** @class */ (function (_super) {
     };
     GameMovingElement.maxAnimeTime = 10000;
     return GameMovingElement;
-}(GameElemement));
+}(GameElement));
 var Player = /** @class */ (function (_super) {
     __extends(Player, _super);
     function Player(x, y, showHitBox, hitBoxColor) {

@@ -1,6 +1,6 @@
 //interface pour les style des elements
 const { log } = console;
-interface GameElemementStyleInterface<T extends "rectangle" | "image" | "path"> {
+interface GameElementStyleInterface<T extends "rectangle" | "image" | "path"> {
     type: T,
     points?: T extends "path" ? Array<[number, number]> : undefined,
     color?: T extends "path" | "rectangle" ? string | rgb : undefined,
@@ -24,7 +24,7 @@ enum Face {
 /**
  * @class les elements du jeu
  */
-class GameElemement {
+class GameElement {
     //la largeur de l'element
     width: number;
     //la hauteur de l'element
@@ -46,7 +46,7 @@ class GameElemement {
     //la fonction appelé a la mort de l'element
     callOnDeath: Function;
     //le style de l'element
-    style: GameElemementStyleInterface<"image" | "path" | "rectangle">;
+    style: GameElementStyleInterface<"image" | "path" | "rectangle">;
 
     showHitBox: boolean;
 
@@ -54,7 +54,7 @@ class GameElemement {
 
     collision: boolean = false;
 
-    constructor(width: number, height: number, x: number, y: number, life: number, style: GameElemementStyleInterface<"image" | "path" | "rectangle">, fx: number = 0, fy: number = 0, collision: boolean = false, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), onDamage: Function = function () { }, onDeath: Function = function () { }) {
+    constructor(width: number, height: number, x: number, y: number, life: number, style: GameElementStyleInterface<"image" | "path" | "rectangle">, fx: number = 0, fy: number = 0, collision: boolean = false, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), onDamage: Function = function () { }, onDeath: Function = function () { }) {
         //definition des proprierter et verrification de type et de valeur si besoin
         this.width = width;
         this.height = height;
@@ -150,8 +150,8 @@ class GameElemement {
         this.x += this.fx;
         this.y += this.fy;
     }
-    touch<bol extends true | false>(gameElement: GameElemement, detail: bol): bol extends false ? boolean : detailTouchInterface {
-        return GameElemement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
+    touch<bol extends true | false>(gameElement: GameElement, detail: bol): bol extends false ? boolean : detailTouchInterface {
+        return GameElement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
     }
     
     static touch <bol extends true | false>(width :number, height :number, x :number, y :number, gWidth :number, gHeight :number, gX :number, gY :number, detail: bol): bol extends false ? boolean : detailTouchInterface {
@@ -190,7 +190,7 @@ class GameElemement {
     }
 }
 
-const CollisionObjects: GameElemement[] = [];
+const CollisionObjects: GameElement[] = [];
 
 enum Orientation {
     left,
@@ -227,7 +227,7 @@ interface GameEtityTrueActionSpritesSpriteInterface {
     left: Array<HTMLImageElement>,
     right: Array<HTMLImageElement>
 }
-class GameEntity extends GameElemement {
+class GameEntity extends GameElement {
     static maxAnimeTime: number = 10000;
     orientation: Orientation;
     isWalking: boolean;
@@ -414,16 +414,35 @@ class GameEntity extends GameElemement {
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
         }
-        for(let i = 0;i < this.fy;i++) {
+        let ffx :number | null = null;
+        let ffy :number | null = null;
+        let fff = false;
+        /*for(let i = 0;i < this.fy;i++) {
             let r = this.fx / this.fy;
-        }
-        this.y += this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
-        this.x += this.fx;
+            let t :detailTouchInterface = {
+                res: false,
+                superposed: false,
+                face : Face.bottom
+            };
+            for(let c of CollisionObjects) {
+                t = GameElement.touch(this.width, this.height, this.x + i * r, this.y + i, c.width, c.height, c.x, c.y, true);
+                if (t.res && !t.superposed) break;
+            }
+
+            if (t.res && !t.superposed) {
+                ffx = i*r;
+                ffy = i;
+                fff = true;
+                break;
+            }
+        }*/
+        this.y += fff && ffy !== null ? ffy : this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
+        this.x += fff && ffx !== null ? ffx : this.fx;
         collisions = [];
         for (let c of CollisionObjects) {
             collisions.push(this.touch(c, true));
         }
-        for (let c of collisions) {
+        /*for (let c of collisions) {
             if (c.res && c.face === Face.left && c.superposed) {
                 this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
             } else if (c.res && c.face === Face.right && c.superposed) {
@@ -431,7 +450,7 @@ class GameEntity extends GameElemement {
             } else if (c.res && c.face === Face.top && c.superposed) {
                 this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
             }
-        }
+        }*/
         touchGround = false;
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
@@ -483,7 +502,7 @@ interface GameMovingElemementStyleInterface<T extends "rectangle" | "sprites" | 
     closePath?: T extends "path" ? boolean : undefined
 }
 
-class GameMovingElement extends GameElemement {
+class GameMovingElement extends GameElement {
     movingStyle :GameMovingElemementStyleInterface<"sprites" | "rectangle" | "path">;
     sprites :HTMLImageElement[] | null = null;
     deathSprites :HTMLImageElement[] | null = null;

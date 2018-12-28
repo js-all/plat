@@ -10,23 +10,23 @@ document.body.appendChild(canvas);
 canvas.width = cw;
 canvas.height = ch;
 ctx.imageSmoothingEnabled = false;
-var ground = new GameElemement(1000 - 0, 100, 0, 900, 0, {
+var ground = new GameElement(1000 - 0, 100, 0, 900, 0, {
     type: "rectangle",
     color: rgb.green
 }, 0, 0, true);
-var wallRight = new GameElemement(100, 1000 - 100, 1000 - 100, 0, 0, {
+var wallRight = new GameElement(100, 1000 - 100, 1000 - 100, 0, 0, {
     type: "rectangle",
     color: 'red'
 }, 0, 0, true);
-var wallLeft = new GameElemement(100, 600, 0, 0, 0, {
+var wallLeft = new GameElement(100, 600, 0, 0, 0, {
     type: 'rectangle',
     color: 'pink'
 }, 0, 0, true);
-var plat1 = new GameElemement(1000 / 3, 100, 0, 600, 0, {
+var plat1 = new GameElement(1000 / 3, 100, 0, 600, 0, {
     type: 'rectangle',
     color: 'orange'
 }, 0, 0, true);
-var plat2 = new GameElemement(1000 / 3, 100, 1000 / 3 * 2 / 2, 300, 0, {
+var plat2 = new GameElement(1000 / 3, 100, 1000 / 3 * 2 / 2, 300, 0, {
     type: 'rectangle',
     color: 'blue'
 }, 0, 0, true);

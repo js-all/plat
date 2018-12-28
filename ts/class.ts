@@ -151,24 +151,28 @@ class GameElemement {
         this.y += this.fy;
     }
     touch<bol extends true | false>(gameElement: GameElemement, detail: bol): bol extends false ? boolean : detailTouchInterface {
+        return GameElemement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
+    }
+    
+    static touch <bol extends true | false>(width :number, height :number, x :number, y :number, gWidth :number, gHeight :number, gX :number, gY :number, detail: bol): bol extends false ? boolean : detailTouchInterface {
         let X: boolean = false;
         let Y: boolean = false;
-        if (gameElement.x <= this.width + this.x && gameElement.x + gameElement.width >= this.x) X = true;
-        if (gameElement.y <= this.height + this.y && gameElement.y + gameElement.height >= this.y) Y = true;
+        if (gX <= width + x && gX + gWidth >= x) X = true;
+        if (gY <= height + y && gY + gHeight >= y) Y = true;
         if (detail) {
             let face: Face = Face.top;
-            let superposed: boolean = (this.x === gameElement.x + gameElement.width || this.x + this.width === gameElement.x || this.y === gameElement.y + gameElement.height || this.y + this.height === gameElement.y);
+            let superposed: boolean = (x === gX + gWidth || x + width === gX || y === gY + gHeight || y + height === gY);
             superposed = superposed ? false : true;
-            let collideLarg = (gameElement.x + gameElement.width <= this.width + this.x ? gameElement.width + gameElement.x : this.x + this.width) - (gameElement.x >= this.x ? gameElement.x : this.x);
-            let collideLong = (gameElement.y + gameElement.height <= this.y + this.height ? gameElement.y + gameElement.height : this.y + this.height) - (gameElement.y >= this.y ? gameElement.y : this.y);
+            let collideLarg = (gX + gWidth <= width + x ? gWidth + gX : x + width) - (gX >= x ? gX : x);
+            let collideLong = (gY + gHeight <= y + height ? gY + gHeight : y + height) - (gY >= y ? gY : y);
             if (collideLarg >= collideLong) {
-                if (this.y + (this.height / 2) <= gameElement.y + (gameElement.height / 2)) {
+                if (y + (height / 2) <= gY + (gHeight / 2)) {
                     face = Face.top;
                 } else {
                     face = Face.bottom
                 }
             } else if (collideLong > collideLarg) {
-                if (this.x + (this.width / 2) <= gameElement.x + (gameElement.width / 2)) {
+                if (x + (width / 2) <= gX + (gWidth / 2)) {
                     face = Face.left;
                 } else {
                     face = Face.right;
@@ -395,6 +399,10 @@ class GameEntity extends GameElemement {
         this.isJumping = true;
     }
 
+    attack() {
+        return console.warn('attack is not defined');
+    }
+
     move() {
         const nfy = 25;
         const ngr = 1;
@@ -405,6 +413,9 @@ class GameEntity extends GameElemement {
         let touchGround = false;
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
+        }
+        for(let i = 0;i < this.fy;i++) {
+            let r = this.fx / this.fy;
         }
         this.y += this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
         this.x += this.fx;
@@ -580,6 +591,8 @@ class GameMovingElement extends GameElemement {
         this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
         this.lastAnimeFrame = new Date();
     }
+
+
 
     kill() {
         this.life = 0;

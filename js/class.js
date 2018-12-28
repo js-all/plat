@@ -143,20 +143,23 @@ var GameElemement = /** @class */ (function () {
         this.y += this.fy;
     };
     GameElemement.prototype.touch = function (gameElement, detail) {
+        return GameElemement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
+    };
+    GameElemement.touch = function (width, height, x, y, gWidth, gHeight, gX, gY, detail) {
         var X = false;
         var Y = false;
-        if (gameElement.x <= this.width + this.x && gameElement.x + gameElement.width >= this.x)
+        if (gX <= width + x && gX + gWidth >= x)
             X = true;
-        if (gameElement.y <= this.height + this.y && gameElement.y + gameElement.height >= this.y)
+        if (gY <= height + y && gY + gHeight >= y)
             Y = true;
         if (detail) {
             var face = Face.top;
-            var superposed = (this.x === gameElement.x + gameElement.width || this.x + this.width === gameElement.x || this.y === gameElement.y + gameElement.height || this.y + this.height === gameElement.y);
+            var superposed = (x === gX + gWidth || x + width === gX || y === gY + gHeight || y + height === gY);
             superposed = superposed ? false : true;
-            var collideLarg = (gameElement.x + gameElement.width <= this.width + this.x ? gameElement.width + gameElement.x : this.x + this.width) - (gameElement.x >= this.x ? gameElement.x : this.x);
-            var collideLong = (gameElement.y + gameElement.height <= this.y + this.height ? gameElement.y + gameElement.height : this.y + this.height) - (gameElement.y >= this.y ? gameElement.y : this.y);
+            var collideLarg = (gX + gWidth <= width + x ? gWidth + gX : x + width) - (gX >= x ? gX : x);
+            var collideLong = (gY + gHeight <= y + height ? gY + gHeight : y + height) - (gY >= y ? gY : y);
             if (collideLarg >= collideLong) {
-                if (this.y + (this.height / 2) <= gameElement.y + (gameElement.height / 2)) {
+                if (y + (height / 2) <= gY + (gHeight / 2)) {
                     face = Face.top;
                 }
                 else {
@@ -164,7 +167,7 @@ var GameElemement = /** @class */ (function () {
                 }
             }
             else if (collideLong > collideLarg) {
-                if (this.x + (this.width / 2) <= gameElement.x + (gameElement.width / 2)) {
+                if (x + (width / 2) <= gX + (gWidth / 2)) {
                     face = Face.left;
                 }
                 else {
@@ -390,6 +393,9 @@ var GameEntity = /** @class */ (function (_super) {
         this.fj = Math.abs(power);
         this.isJumping = true;
     };
+    GameEntity.prototype.attack = function () {
+        return console.warn('attack is not defined');
+    };
     GameEntity.prototype.move = function () {
         var nfy = 25;
         var ngr = 1;
@@ -403,6 +409,9 @@ var GameEntity = /** @class */ (function (_super) {
             var c = collisions_1[_a];
             if (c.res && c.face === Face.top)
                 touchGround = true;
+        }
+        for (var i = 0; i < this.fy; i++) {
+            var r = this.fx / this.fy;
         }
         this.y += this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
         this.x += this.fx;

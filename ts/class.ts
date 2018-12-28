@@ -131,171 +131,21 @@ class GameElemement {
         return X && Y;
     }
 }
-enum Orientation {
-    left,
-    right
-}
-enum Actions {
-    jumping,
-    walking,
-    attacking,
-    nothing
-}
-interface GameEntitySpriteInterface {
-    walking: GameEntityActionSpriteInterface,
-    jumping: GameEntityActionSpriteInterface,
-    attacking: GameEntityActionSpriteInterface,
-    nothing: GameEntityActionSpriteInterface
-}
-interface GameEntityActionSpriteInterface {
-    spritesPath: Array<string>,
-    animeTime: number
-}
-interface GameEntityTrueSpriteInterface {
-    walking: GameEntityTrueActionSpriteInterface,
-    jumping: GameEntityTrueActionSpriteInterface,
-    attacking: GameEntityTrueActionSpriteInterface,
-    nothing: GameEntityTrueActionSpriteInterface
-}
-interface GameEntityTrueActionSpriteInterface {
-    sprites: GameEtityTrueActionSpritesSpriteInterface,
-    animeTime: number
 
-}
-interface GameEtityTrueActionSpritesSpriteInterface {
-    left: Array<HTMLImageElement>,
-    right: Array<HTMLImageElement>
-}
-class GameEntity extends GameElemement {
-    static maxAnimeTime: number = 10000;
-    orientation: Orientation;
-    isWalking: boolean;
-    sprites: GameEntityTrueSpriteInterface;
-    action: Actions;
-    animeFrame: number = 0;
-    maxAnimeFrame :number = 0;
-    _sprite :HTMLImageElement;
-
-    constructor(width: number, height: number, x: number, y: number, life: number, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, onDamage: Function = function () { }, onDeath: Function = function () { }) {
-        super(width, height, x, y, life, {
-            type: 'image',
-            IMGPath: ''
-        }, fx, fy, onDamage, onDeath);
-        this.orientation = orientation;
-        this.isWalking = false;
-        let walkingSprites: GameEtityTrueActionSpritesSpriteInterface = {
-            left: [],
-            right: []
-        };
-        let jumpingSprites: GameEtityTrueActionSpritesSpriteInterface = {
-            left: [],
-            right: []
-        }
-        let attackingSprites: GameEtityTrueActionSpritesSpriteInterface = {
-            left: [],
-            right: []
-        }
-        let nothingSprites: GameEtityTrueActionSpritesSpriteInterface = {
-            left: [],
-            right: []
-        }
-        for (let i of sprites.walking.spritesPath) {
-            let imgR = pathToImage(i)
-            let imgL = rotateImageOnYaxis(imgR);
-            walkingSprites.left.push(imgL);
-            walkingSprites.right.push(imgR);
-        }
-        let walkingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.walking.animeTime)
-        for (let i = 1; i < walkingSpritesTime; i++) {
-            walkingSprites.left.push(walkingSprites.left[i - 1]);
-            walkingSprites.right.push(walkingSprites.right[i - 1]);
-        }
-        for (let i of sprites.jumping.spritesPath) {
-            let imgR = pathToImage(i)
-            let imgL = rotateImageOnYaxis(imgR);
-            jumpingSprites.left.push(imgL);
-            jumpingSprites.right.push(imgR);
-        }
-        let jumpingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.jumping.animeTime)
-        for (let i = 1; i < jumpingSpritesTime; i++) {
-            jumpingSprites.left.push(jumpingSprites.left[i - 1]);
-            jumpingSprites.right.push(jumpingSprites.right[i - 1]);
-        }
-        for (let i of sprites.attacking.spritesPath) {
-            let imgR = pathToImage(i)
-            let imgL = rotateImageOnYaxis(imgR);
-            attackingSprites.left.push(imgL);
-            attackingSprites.right.push(imgR);
-        }
-        let attackingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.attacking.animeTime)
-        for (let i = 1; i < attackingSpritesTime; i++) {
-            attackingSprites.left.push(attackingSprites.left[i - 1]);
-            attackingSprites.right.push(attackingSprites.right[i - 1]);
-        }
-        for (let i of sprites.nothing.spritesPath) {
-            let imgR = pathToImage(i)
-            let imgL = rotateImageOnYaxis(imgR);
-            nothingSprites.left.push(imgL);
-            nothingSprites.right.push(imgR);
-        }
-        let nothingSpritesTime = Math.round(GameEntity.maxAnimeTime / sprites.nothing.animeTime)
-        for (let i = 1; i < nothingSpritesTime; i++) {
-            nothingSprites.left.push(nothingSprites.left[i - 1]);
-            nothingSprites.right.push(nothingSprites.right[i - 1]);
-        }
-        this.sprites = {
-            walking: {
-                sprites: walkingSprites,
-                animeTime: sprites.walking.animeTime
-            },
-            jumping: {
-                sprites: jumpingSprites,
-                animeTime: sprites.jumping.animeTime
-            },
-            attacking: {
-                sprites: attackingSprites,
-                animeTime: sprites.attacking.animeTime
-            },
-            nothing: {
-                sprites: nothingSprites,
-                animeTime: sprites.nothing.animeTime
-            }
-        }
-        this.action = Actions.nothing;
-        this._sprite = new Image();
-    }
-    move() {
-        this.x += this.fx;
-        this.y += this.fy;
-
-    }
-    set sprite(value :HTMLImageElement) {
-        this._sprite = value;
-        this.style.IMGPath = value.src;
-    }
-    get sprite() :HTMLImageElement {
-        return this._sprite;
-    }
-    setAction(action :Actions) {
-        this.action = action;
-        this.animeFrame = 0;
-    }
-    anime() {
-        if (this.action === Actions.attacking) {
-            if (this.orientation === Orientation.left)       this.sprite = this.sprites.attacking.sprites.left [this.animeFrame];
-            else if (this.orientation === Orientation.right) this.sprite = this.sprites.attacking.sprites.right[this.animeFrame];
-        } else if (this.action === Actions.walking) {
-            if (this.orientation === Orientation.left)       this.sprite = this.sprites.walking  .sprites.left [this.animeFrame];
-            else if (this.orientation === Orientation.right) this.sprite = this.sprites.walking  .sprites.right[this.animeFrame];
-        } else if (this.action === Actions.jumping) {
-            if (this.orientation === Orientation.left)       this.sprite = this.sprites.jumping  .sprites.left [this.animeFrame];
-            else if (this.orientation === Orientation.right) this.sprite = this.sprites.jumping  .sprites.right[this.animeFrame];
-        } else if (this.action === Actions.nothing) {
-            if (this.orientation === Orientation.left)       this.sprite = this.sprites.nothing  .sprites.left [this.animeFrame];
-            else if (this.orientation === Orientation.right) this.sprite = this.sprites.nothing  .sprites.right[this.animeFrame];
-        }
-        this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 0 : this.animeFrame + 1; 
-
+class Player extends GameElemement {
+    ammos :number;
+    dirrection :number;
+    /**
+     * 
+     * @param x - the x position of thet player
+     * @param y - the y position of the player
+     * @param life - the life of the player
+     * @param ammos - the ammos of the player
+     * @param dirrection - the dirrection of the player in rad
+     */
+    constructor(x :number, y :number, life :number = 10, ammos :number = 100, dirrection :number = -(Math.PI / 2)) {
+        super(50, 50, x, y, life, {type: 'rectangle', color: 'blue'});
+        this.ammos = ammos;
+        this.dirrection = dirrection;
     }
 }
-

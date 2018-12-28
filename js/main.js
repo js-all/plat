@@ -51,30 +51,35 @@ function move() {
     ground.move();
     player.fx = 0;
     var actionUsed = false;
+    if (player.isJumping && player.action !== Actions.jumping)
+        player.setAction(Actions.jumping);
     for (var _i = 0, activeKeys_1 = activeKeys; _i < activeKeys_1.length; _i++) {
         var key = activeKeys_1[_i];
         switch (key) {
             case 37:
                 player.fx = -10;
-                player.orientation = Orientation.left;
+                //player.orientation = Orientation.left;
                 if (player.action !== Actions.walking)
                     player.setAction(Actions.walking);
                 actionUsed = true;
                 break;
             case 38:
-                if (!player.isJumping)
-                    player.jump();
                 if (player.isJumping && player.action !== Actions.jumping)
                     player.setAction(Actions.jumping);
+                player.jump();
                 actionUsed = true;
                 break;
             case 39:
                 player.fx = 10;
-                player.orientation = Orientation.right;
+                //player.orientation = Orientation.right;
                 if (player.action !== Actions.walking)
                     player.setAction(Actions.walking);
                 actionUsed = true;
                 break;
+            case 16:
+                if (player.action !== Actions.attacking)
+                    player.setAction(Actions.attacking);
+                actionUsed = true;
         }
     }
     if (!actionUsed) {

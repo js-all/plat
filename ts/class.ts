@@ -390,6 +390,7 @@ class GameEntity extends GameElemement {
     }
 
     jump(power: number = 50) {
+        if (this.isJumping) return;
         this.fj = Math.abs(power);
         this.isJumping = true;
     }
@@ -424,7 +425,7 @@ class GameEntity extends GameElemement {
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
         }
-
+        if (!touchGround) this.isJumping = true;
         if (this.fj > 0) {
             this.fj -= this.gravity;
             this.gravity += 1;
@@ -460,7 +461,7 @@ class GameEntity extends GameElemement {
 
 class Player extends GameEntity {
     constructor(x: number, y: number, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random()) {
-        super(100, 100, x, y, 10, {
+        super(68.75, 93.75, x, y, 10, {
             walking: {
                 spritesPath: [
                     "./images/sprites/player/walk/0.png",
@@ -489,5 +490,15 @@ class Player extends GameEntity {
                 animeTime: 1000
             }
         }, 0, 0, Orientation.right, showHitBox, hitBoxColor);
+    }
+    draw(ctx: CanvasRenderingContext2D) {
+        if (this.showHitBox) {
+            ctx.save();
+            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.restore();
+        }
+        let y = 1;
+        ctx.drawImage(pathToImage(this.style.IMGPath || ''), 5, y, 22, 32 - (y), this.x, this.y, this.width, this.height)
     }
 }

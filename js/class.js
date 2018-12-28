@@ -385,6 +385,8 @@ var GameEntity = /** @class */ (function (_super) {
     };
     GameEntity.prototype.jump = function (power) {
         if (power === void 0) { power = 50; }
+        if (this.isJumping)
+            return;
         this.fj = Math.abs(power);
         this.isJumping = true;
     };
@@ -427,6 +429,8 @@ var GameEntity = /** @class */ (function (_super) {
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
+        if (!touchGround)
+            this.isJumping = true;
         if (this.fj > 0) {
             this.fj -= this.gravity;
             this.gravity += 1;
@@ -470,7 +474,7 @@ var Player = /** @class */ (function (_super) {
     function Player(x, y, showHitBox, hitBoxColor) {
         if (showHitBox === void 0) { showHitBox = false; }
         if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
-        return _super.call(this, 100, 100, x, y, 10, {
+        return _super.call(this, 68.75, 93.75, x, y, 10, {
             walking: {
                 spritesPath: [
                     "./images/sprites/player/walk/0.png",
@@ -500,5 +504,15 @@ var Player = /** @class */ (function (_super) {
             }
         }, 0, 0, Orientation.right, showHitBox, hitBoxColor) || this;
     }
+    Player.prototype.draw = function (ctx) {
+        if (this.showHitBox) {
+            ctx.save();
+            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+            ctx.restore();
+        }
+        var y = 1;
+        ctx.drawImage(pathToImage(this.style.IMGPath || ''), 5, y, 22, 32 - (y), this.x, this.y, this.width, this.height);
+    };
     return Player;
 }(GameEntity));

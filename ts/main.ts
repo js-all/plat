@@ -52,25 +52,29 @@ function move(): void {
     ground.move()
     player.fx = 0;
     let actionUsed = false;
+    if (player.isJumping && player.action !== Actions.jumping) player.setAction(Actions.jumping);
     for (let key of activeKeys) {
         switch (key) {
             case 37:
                 player.fx = -10;
-                player.orientation = Orientation.left;
+                //player.orientation = Orientation.left;
                 if (player.action !== Actions.walking) player.setAction(Actions.walking);
                 actionUsed = true;
                 break;
             case 38:
-                if (!player.isJumping) player.jump();
-                if (player.isJumping && player.action !== Actions.jumping) player.setAction(Actions.jumping);
+            if (player.isJumping && player.action !== Actions.jumping) player.setAction(Actions.jumping);
+                player.jump();
                 actionUsed = true;
                 break;
             case 39:
                 player.fx = 10;
-                player.orientation = Orientation.right;
+                //player.orientation = Orientation.right;
                 if (player.action !== Actions.walking) player.setAction(Actions.walking);
                 actionUsed = true;
                 break;
+            case 16:
+                if (player.action !== Actions.attacking) player.setAction(Actions.attacking);
+                actionUsed = true;
         }
     }
     if (!actionUsed) {

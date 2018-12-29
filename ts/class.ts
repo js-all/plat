@@ -1,61 +1,157 @@
-//interface pour les style des elements
-const { log } = console;
+/**
+ * interface du style des GameElements
+ */
 interface GameElementStyleInterface<T extends "rectangle" | "image" | "path"> {
+    /**
+     *  le type de style
+     */
     type: T,
+    /**
+     * si type est a "path" les points sur lesquels passé pour faire la figure.
+     */
     points?: T extends "path" ? Array<[number, number]> : undefined,
+    /**
+     * si type est a "path" ou "rectangle" la couleure 
+     */
     color?: T extends "path" | "rectangle" ? string | rgb : undefined,
+    /**
+     * si type est a "path" dis si la figure vas être rempli
+     */
     fill?: T extends "path" ? boolean : undefined,
+    /**
+     * si type est a "image" le chemin ver l'image
+     */
     IMGPath?: T extends "image" ? string : undefined,
+    /**
+     * si type est a "image" indique si l'image doit être changé de taile
+     */
     resiveIMG?: T extends "image" ? boolean : undefined,
+    /**
+     * si type est a "path" indique si draw doit montré prescisément les points
+     */
     showPoints?: T extends "path" ? boolean : undefined,
+    /**
+     * si type est a "path" indique si la figure doit être fermer
+     */
     closePath?: T extends "path" ? boolean : undefined
 }
-
+/**
+ * interface des details renvoiyer par la fondtion touch quand detail est a true
+ */
 interface detailTouchInterface {
+    /**
+     * la reponsse, si les élement se touchent
+     */
     res: boolean,
+    /**
+     * la face que l'element touche sur l'element 2
+     */
     face: Face,
+    /**
+     * indique si les elment son superposé, si ils se touchent d'1px, ils ne le sont pas sinon ils le sont
+     */
     superposed: boolean
 }
-
+/**
+ * les Faces
+ */
 enum Face {
-    top, left, right, bottom
+    /**
+     * la face du haut
+     */
+    top,
+    /**
+     * la face de la gauche
+     */
+    left,
+    /**
+     * la face de la droite
+     */
+    right,
+    /**
+     * la face du bas
+     */
+    bottom
 }
 
 /**
  * @class les elements du jeu
  */
 class GameElement {
-    //la largeur de l'element
+    /**
+     * la largeur de l'element
+    */
     width: number;
-    //la hauteur de l'element
+    /**
+     * la hauteur de l'element
+     */
     height: number;
-    //l'absice de l'element
+    /**
+     * l'absice de l'element
+     */
     x: number;
-    //m'ordoné de l'element
+    /**
+     * l'ordoné de l'element
+     */
     y: number;
-    //la vie de l'element
+    /**
+     * la vie de l'element
+     */
     life: number;
-    //la vie maximum de l'element
+    /**
+     * la vie maximum de l'element
+     */
     maxLife: number;
-    //la force x de l'element
+    /**
+     * la force x de l'element
+     */
     fx: number;
-    //la force y de l'element
+    /**
+     * la force y de l'element
+     */
     fy: number;
-    //la fonction apllé quand l'element perd de la vie
+    /**
+     * la fonction apllé quand l'element perd de la vie
+     */
     callOnDamage: Function;
-    //la fonction appelé a la mort de l'element
+    /**
+     * la fonction appelé a la mort de l'element
+     */
     callOnDeath: Function;
-    //le style de l'element
+    /**
+     * le style de l'element
+     */
     style: GameElementStyleInterface<"image" | "path" | "rectangle">;
-
+    /**
+     * boolean indiquen si la hit box de l'objet doit être afficher
+     */
     showHitBox: boolean;
-
+    /**
+     * la couleure de la hitbox
+     */
     hitBoxColor: rgb | string;
-
+    /**
+     * dit si l'objet aura des collsions
+     */
     collision: boolean = false;
-
+    /**
+     * constructeur de GameElement
+     * @param width - la largeur de l'objet
+     * @param height - la hauteur de l'objet
+     * @param x - l'absice de l'objet
+     * @param y - l'ordonée de l'objet
+     * @param life - la vie de l'objet
+     * @param style - le style de l'objet
+     * @param fx - la force y de l'objet
+     * @param fy - la force x de l'objet
+     * @param collision - indique si l'objet recevra des collisions
+     * @param showHitBox - indique si la hitbox de l'objet doit être afficher
+     * @param hitBoxColor - la couleure de la hitbox
+     * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
+     * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
+     */
     constructor(width: number, height: number, x: number, y: number, life: number, style: GameElementStyleInterface<"image" | "path" | "rectangle">, fx: number = 0, fy: number = 0, collision: boolean = false, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), onDamage: Function = function () { }, onDeath: Function = function () { }) {
-        //definition des proprierter et verrification de type et de valeur si besoin
+
         this.width = width;
         this.height = height;
         this.x = x;
@@ -85,7 +181,6 @@ class GameElement {
      * @param ctx - le context sur lequel dessiner.
      */
     draw(ctx: CanvasRenderingContext2D): void {
-        //si son type de style est un rectangle
         if (this.showHitBox) {
             ctx.save();
             ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
@@ -146,15 +241,34 @@ class GameElement {
             }
         }
     }
+    /**
+     * fait bouger l'lement selon les forces x et y qu'il a
+     */
     move() {
         this.x += this.fx;
         this.y += this.fy;
     }
+    /**
+     * retourne un boolean ou une detailTouchInterface indiquant si l'element touche oui ou non l'element passé en parametre
+     * @param gameElement - l'element testé
+     * @param detail - boolean disant si la foction va retourné une detailTouchInteface, ou just boolean, la detailTouchInterface indiquera plus de details que just le boolean
+     */
     touch<bol extends true | false>(gameElement: GameElement, detail: bol): bol extends false ? boolean : detailTouchInterface {
         return GameElement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
     }
-    
-    static touch <bol extends true | false>(width :number, height :number, x :number, y :number, gWidth :number, gHeight :number, gX :number, gY :number, detail: bol): bol extends false ? boolean : detailTouchInterface {
+    /**
+     * retourne un boolean ou une detailTouchInterface indiquant si dans la cas ou il y aurait des element avec les largeurs, heuteurs, ordonées et abscices fourni en parametre ils se toucherait
+     * @param width - la largeure de l'element 1
+     * @param height - la hauteure de l'element 1
+     * @param x - l'abscice de l'element 1
+     * @param y - l'ordonée de l'element 1
+     * @param gWidth - la largeure de l'element 2
+     * @param gHeight - la hauteure de l'element 2
+     * @param gX - l'abscice de l'element 2
+     * @param gY - l'ordonée de l'element 2
+     * @param detail - boolean disant si la foction va retourné une detailTouchInteface, ou just boolean, la detailTouchInterface indiquera plus de details que just le boolean
+     */
+    static touch<bol extends true | false>(width: number, height: number, x: number, y: number, gWidth: number, gHeight: number, gX: number, gY: number, detail: bol): bol extends false ? boolean : detailTouchInterface {
         let X: boolean = false;
         let Y: boolean = false;
         if (gX <= width + x && gX + gWidth >= x) X = true;
@@ -189,58 +303,194 @@ class GameElement {
         return <bol extends false ? boolean : detailTouchInterface>res;
     }
 }
-
+/**
+ * les objets a collisions que les GameEntity et autre devront prendre en compte
+ */
 const CollisionObjects: GameElement[] = [];
-
+/**
+ * les Orientations
+ */
 enum Orientation {
+    /**
+     * l'orientation a gauche
+     */
     left,
+    /**
+     * l'orientation a droite
+     */
     right
 }
+/**
+ * les actions
+ */
 enum Actions {
+    /**
+     * l'action de sauter
+     */
     jumping,
+    /**
+     * l'action de marcher
+     */
     walking,
+    /**
+     * l'action d'attaquer
+     */
     attacking,
+    /**
+     * l'action de ne rien faire
+     */
     nothing
 }
+/**
+ * l'interface de sprites de GameEntity a fournire en parametre
+ */
 interface GameEntitySpriteInterface {
+    /**
+     * les sprites de l'action de marcher
+     */
     walking: GameEntityActionSpriteInterface,
+    /**
+     * les sprites de l'action de sauter
+     */
     jumping: GameEntityActionSpriteInterface,
+    /**
+     * les sprites de l'action de attaqué
+     */
     attacking: GameEntityActionSpriteInterface,
+    /**
+     * les sprites de l'action de ne rien faire
+     */
     nothing: GameEntityActionSpriteInterface
 }
+/**
+ * l'interface d'action de sprite de GameEntitySpriteInteface
+ */
 interface GameEntityActionSpriteInterface {
+    /**
+     * les chemin vers les images des sprites
+     */
     spritesPath: Array<string>,
+    /**
+     * la duré de l'animation
+     */
     animeTime: number
 }
+/**
+ * l'interface de sprite de GameEntity utilisé par les methodes
+ */
 interface GameEntityTrueSpriteInterface {
+    /**
+     * les sprites de l'action de marcher
+     */
     walking: GameEntityTrueActionSpriteInterface,
+    /**
+     * les sprites de l'action de sauter
+     */
     jumping: GameEntityTrueActionSpriteInterface,
+    /**
+     * les sprites de l'action de attaqué
+     */
     attacking: GameEntityTrueActionSpriteInterface,
+    /**
+     * les sprites de l'action de ne rien faire
+     */
     nothing: GameEntityTrueActionSpriteInterface
 }
+/**
+ * l'interface Actions de sprites de GameEntityTrueSpriteInterface
+ */
 interface GameEntityTrueActionSpriteInterface {
+    /**
+     * les images des sprites
+     */
     sprites: GameEtityTrueActionSpritesSpriteInterface,
+    /**
+     * la duré de l'animation
+     */
     animeTime: number
 
 }
+/**
+ * l'interface des sprites de GameEntityTrueActionSpriteInterface
+ */
 interface GameEtityTrueActionSpritesSpriteInterface {
+    /**
+     * les sprites dont l'orientation est a gauche
+     */
     left: Array<HTMLImageElement>,
+    /**
+     * les sprites dont l'orientation est a droite
+     */
     right: Array<HTMLImageElement>
 }
+/**
+ * les entités vivantes du jeu
+ */
 class GameEntity extends GameElement {
+    /**
+     * la duré maximal d'animaation
+     */
     static maxAnimeTime: number = 10000;
+    /**
+     * l'orientation de l'entité
+     */
     orientation: Orientation;
+    /**
+     * boolean indiquant si l'entité marche
+     */
     isWalking: boolean;
+    /**
+     * les sprites de l'entité
+     */
     sprites: GameEntityTrueSpriteInterface;
+    /**7
+     * l'actino que l'entité execute
+     */
     action: Actions;
+    /**
+     * la frame ou en est arrivé l'animation
+     */
     animeFrame: number = 0;
+    /**
+     * le nombre total de frame dans l'animation
+     */
     maxAnimeFrame: number = 0;
+    /**
+     * le sprites actuelle de l'entité
+     */
     _sprite: HTMLImageElement;
+    /**
+     * la date du dernier moment ou l'entité a été animé
+     */
     lastAnimeFrame: Date | null = null;
+    /**
+     * la force de saut de l'entité
+     */
     fj: number = 0;
+    /**
+     * boolean indiquant si l'entité est entrain de sauté
+     */
     isJumping: boolean = false;
+    /**
+     * la gravité de lentité
+     */
     gravity: number = 0;
-
+    /**
+     * 
+     * @param width - la largeur de l'entité
+     * @param height - la hauteur de l'entité
+     * @param x - l'absice de l'entité
+     * @param y - l'ordonée de l'entité
+     * @param life - la vie de lantité
+     * @param sprites - les sprites de l'entité
+     * @param fx  - la force x de lentité
+     * @param fy - la force y de l'entité
+     * @param orientation - l'orientation de l'entité
+     * @param showHitBox - boolean indiquant si la hit box de l'entité doit être affiché
+     * @param hitBoxColor - la couleure de la hitbox de l'entité
+     * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
+     * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
+     */
     constructor(width: number, height: number, x: number, y: number, life: number, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), onDamage: Function = function () { }, onDeath: Function = function () { }) {
         super(width, height, x, y, life, {
             type: 'image',
@@ -337,11 +587,18 @@ class GameEntity extends GameElement {
     get sprite(): HTMLImageElement {
         return this._sprite;
     }
+    /**
+     * defini l'action de l'entité et remet a zero l'animatione autre
+     * @param action l'action de l'entité
+     */
     setAction(action: Actions) {
         this.action = action;
         this.animeFrame = 0;
         this.lastAnimeFrame = null;
     }
+    /**
+     * change le sprites de l'entité pour qu'ile s'anime (a utilisé en boucle)
+     */
     anime() {
         if (this.lastAnimeFrame instanceof Date) {
             let len = 1;
@@ -392,17 +649,24 @@ class GameEntity extends GameElement {
         this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
         this.lastAnimeFrame = new Date();
     }
-
+    /**
+     * fait sauté l'entité
+     * @param power la puissance du saut de l'entité
+     */
     jump(power: number = 50) {
         if (this.isJumping) return;
         this.fj = Math.abs(power);
         this.isJumping = true;
     }
-
+    /**
+     * fait attacké l'entité (a redefinire)
+     */
     attack() {
         return console.warn('attack is not defined');
     }
-
+    /**
+     * fait bougé l'entité selon ses forces x et y en applicants les coliisions et la gravité
+     */
     move() {
         const nfy = 25;
         const ngr = 1;
@@ -414,43 +678,24 @@ class GameEntity extends GameElement {
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
         }
-        let ffx :number | null = null;
-        let ffy :number | null = null;
+        let ffx: number | null = null;
+        let ffy: number | null = null;
         let fff = false;
-        /*for(let i = 0;i < this.fy;i++) {
-            let r = this.fx / this.fy;
-            let t :detailTouchInterface = {
-                res: false,
-                superposed: false,
-                face : Face.bottom
-            };
-            for(let c of CollisionObjects) {
-                t = GameElement.touch(this.width, this.height, this.x + i * r, this.y + i, c.width, c.height, c.x, c.y, true);
-                if (t.res && !t.superposed) break;
-            }
-
-            if (t.res && !t.superposed) {
-                ffx = i*r;
-                ffy = i;
-                fff = true;
-                break;
-            }
-        }*/
         this.y += fff && ffy !== null ? ffy : this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
         this.x += fff && ffx !== null ? ffx : this.fx;
         collisions = [];
         for (let c of CollisionObjects) {
             collisions.push(this.touch(c, true));
         }
-        /*for (let c of collisions) {
+        for (let c of collisions) {
             if (c.res && c.face === Face.left && c.superposed) {
                 this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
             } else if (c.res && c.face === Face.right && c.superposed) {
-                this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width; 
+                this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
             } else if (c.res && c.face === Face.top && c.superposed) {
                 this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
             }
-        }*/
+        }
         touchGround = false;
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
@@ -488,49 +733,125 @@ class GameEntity extends GameElement {
         }
     }
 }
-
+/**
+ * interface de style pour les GameMovingElement
+ */
 interface GameMovingElemementStyleInterface<T extends "rectangle" | "sprites" | "path"> {
+    /**
+     *  le type de style
+     */
     type: T,
+    /**
+     * si type est a "path" les points sur lesquels passé pour faire la figure.
+     */
     points?: T extends "path" ? Array<[number, number]> : undefined,
+    /**
+     * si type est a "path" ou "rectangle" la couleure 
+     */
     color?: T extends "path" | "rectangle" ? string | rgb : undefined,
+    /**
+     * si type est a "path" dis si la figure vas être rempli
+     */
     fill?: T extends "path" ? boolean : undefined,
+    /**
+     * les chemin vers les sprites
+     */
     spritesPath?: T extends "sprites" ? string[] : undefined,
-    onDeathSpritesPath? : T extends "sprites" ? string[] : undefined,
+    /**
+     * les chemin veres le sprites de l'animation de mort
+     */
+    onDeathSpritesPath?: T extends "sprites" ? string[] : undefined,
+    /**
+     * dit si draw doit changé la taille des sprites
+     */
     resiveSprites?: T extends "sprites" ? boolean : undefined,
-    animeTime? : T extends "sprites" ? number : undefined,
+    /**
+     * la suré de l'animation
+     */
+    animeTime?: T extends "sprites" ? number : undefined,
+    /**
+     * si type est a "path" indique si draw doit montré prescisément les points
+     */
     showPoints?: T extends "path" ? boolean : undefined,
+    /**
+     * si type est a "path" indique si la figure doit être fermer
+     */
     closePath?: T extends "path" ? boolean : undefined
 }
-
+/**
+ * les entité servent au attaques et autre
+ */
 class GameMovingElement extends GameElement {
-    movingStyle :GameMovingElemementStyleInterface<"sprites" | "rectangle" | "path">;
-    sprites :HTMLImageElement[] | null = null;
-    deathSprites :HTMLImageElement[] | null = null;
-    lastAnimeFrame :Date | null = null;
-    animeFrame :number = 0;
-    maxAnimeFrame :number = 0.
-    _sprite :HTMLImageElement = new Image();
-    isAlive :boolean = true;
-    static maxAnimeTime :number = 10000;
-
-    constructor(width :number, height :number, x :number, y :number, style :GameMovingElemementStyleInterface<"path" | "rectangle" | "sprites">, fx :number = 0, fy :number = 0, life :number = 1, showHitBox :boolean = false, hitBoxColor : rgb = rgb.random()) {
-        super(width, height, x, y, life, {type: 'rectangle', color: 'black'}, fx, fy, false, showHitBox, hitBoxColor);
+    /**
+     * le style de l'entité
+     */
+    movingStyle: GameMovingElemementStyleInterface<"sprites" | "rectangle" | "path">;
+    /**
+     * les sprites de l'entité
+     */
+    sprites: HTMLImageElement[] | null = null;
+    /**
+     * les sprites de l'animation de la mort de l'entité
+     */
+    deathSprites: HTMLImageElement[] | null = null;
+    /**
+     * la date du dernier moment ou l'entité a été animé
+     */
+    lastAnimeFrame: Date | null = null;
+    /**
+     * la frame ou en est arrivé l'animation
+     */
+    animeFrame: number = 0;
+    /**
+     * le nombre total de frame de l'animation
+     */
+    maxAnimeFrame: number = 0;
+    /**
+     * le sprite actuelle de l'animation
+     */
+    _sprite: HTMLImageElement = new Image();
+    /**
+     * bolean indiquant si l'entité est en vie
+     */
+    isAlive: boolean = true;
+    /**
+     * la duré maximal d'animaation
+     */
+    static maxAnimeTime: number = 10000;
+    /**
+     * 
+     * @param width - la largeur de l'entité
+     * @param height - la hauteur de l'entité
+     * @param x - l'absice de l'entité
+     * @param y - l'ordonée de l'entité
+     * @param fx  - la force x de lentité
+     * @param fy - la force y de l'entité
+     * @param life - la vie de lantité
+     * @param showHitBox - bolean indiquant si la hitbox de l'entité doit êter afficher
+     * @param hitBoxColor - la couelure de la hitbox
+     */
+    constructor(width: number, height: number, x: number, y: number, style: GameMovingElemementStyleInterface<"path" | "rectangle" | "sprites">, fx: number = 0, fy: number = 0, life: number = 1, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random()) {
+        super(width, height, x, y, life, { type: 'rectangle', color: 'black' }, fx, fy, false, showHitBox, hitBoxColor);
         this.movingStyle = style;
         if (this.movingStyle.type === 'sprites') {
             this.sprites = [];
-            if(this.movingStyle.spritesPath === undefined) throw new TypeError('GameMovingElement, spritesPath must be defined if type is sprites');
-            for(let i of this.movingStyle.spritesPath) {
+            if (this.movingStyle.spritesPath === undefined) throw new TypeError('GameMovingElement, spritesPath must be defined if type is sprites');
+            for (let i of this.movingStyle.spritesPath) {
                 this.sprites.push(pathToImage(i));
             }
             if (this.movingStyle.onDeathSpritesPath !== undefined) {
                 this.deathSprites = [];
-                for(let i of this.movingStyle.onDeathSpritesPath) {
+                for (let i of this.movingStyle.onDeathSpritesPath) {
                     this.deathSprites.push(pathToImage(i));
                 }
             }
         }
     }
-    draw(ctx :CanvasRenderingContext2D) {
+    /**
+     * dessine l'élement
+     * @param ctx - le context sur lequelle m'element doit être dessiné
+     */
+    draw(ctx: CanvasRenderingContext2D) {
         if (this.showHitBox) {
             ctx.save();
             ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
@@ -541,7 +862,7 @@ class GameMovingElement extends GameElement {
             let color: string = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
             ctx.fillStyle = color;
             ctx.fillRect(this.x, this.y, this.width, this.height)
-        }  else if (this.movingStyle.type === 'path') {
+        } else if (this.movingStyle.type === 'path') {
             let color: string = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
             ctx.fillStyle = color;
             ctx.strokeStyle = color;
@@ -581,24 +902,26 @@ class GameMovingElement extends GameElement {
                     ctx.closePath();
                 }
             }
-        } else if(this.movingStyle.type === 'sprites') {
-            if(this.movingStyle.resiveSprites || false) {
+        } else if (this.movingStyle.type === 'sprites') {
+            if (this.movingStyle.resiveSprites || false) {
                 ctx.drawImage(this._sprite, this.x, this.y, this.width, this.height);
             } else {
                 ctx.drawImage(this._sprite, this.x, this.y);
             }
         }
     }
-
+    /**
+     * change le sprites de l'entité pour qu'ile s'anime (a utilisé en boucle)
+     */
     anime() {
         if (this.movingStyle.type !== 'sprites') return;
         if (this.sprites === null) return;
         if (this.lastAnimeFrame instanceof Date) {
             let len = 1;
             if (this.isAlive) len = this.sprites.length;
-            else if(this.deathSprites !== null) len = this.deathSprites.length;
+            else if (this.deathSprites !== null) len = this.deathSprites.length;
             if (this.movingStyle.animeTime === undefined) this.movingStyle.animeTime = 100;
-            let time :number = this.movingStyle.animeTime;
+            let time: number = this.movingStyle.animeTime;
             if (new Date().getTime() - this.lastAnimeFrame.getTime() < time) return;
         }
         if (this.isAlive) this._sprite = this.sprites[this.animeFrame];
@@ -610,9 +933,9 @@ class GameMovingElement extends GameElement {
         this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
         this.lastAnimeFrame = new Date();
     }
-
-
-
+    /**
+     * tue l'element
+     */
     kill() {
         this.life = 0;
         this.isAlive = false;
@@ -621,8 +944,17 @@ class GameMovingElement extends GameElement {
         this.anime();
     }
 }
-
+/**
+ * la class de joueure
+ */
 class Player extends GameEntity {
+    /**
+     * crée un nouvean joueure
+     * @param x - l'absice du joueure
+     * @param y - l'ordoné du joueure
+     * @param showHitBox - boolean indiquan si la hitbox du joueure doit être afficher
+     * @param hitBoxColor - la couleure de la hitbox
+     */
     constructor(x: number, y: number, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random()) {
         super(68.75, 93.75, x, y, 10, {
             walking: {
@@ -654,6 +986,10 @@ class Player extends GameEntity {
             }
         }, 0, 0, Orientation.right, showHitBox, hitBoxColor);
     }
+    /**
+     * dessine le joueure
+     * @param ctx - le context sur le quelle dessiner le joueure
+     */
     draw(ctx: CanvasRenderingContext2D) {
         if (this.showHitBox) {
             ctx.save();

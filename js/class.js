@@ -1,40 +1,51 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-//interface pour les style des elements
-var log = console.log;
+/**
+ * les Faces
+ */
 var Face;
 (function (Face) {
+    /**
+     * la face du haut
+     */
     Face[Face["top"] = 0] = "top";
+    /**
+     * la face de la gauche
+     */
     Face[Face["left"] = 1] = "left";
+    /**
+     * la face de la droite
+     */
     Face[Face["right"] = 2] = "right";
+    /**
+     * la face du bas
+     */
     Face[Face["bottom"] = 3] = "bottom";
 })(Face || (Face = {}));
 /**
  * @class les elements du jeu
  */
-var GameElement = /** @class */ (function () {
-    function GameElement(width, height, x, y, life, style, fx, fy, collision, showHitBox, hitBoxColor, onDamage, onDeath) {
-        if (fx === void 0) { fx = 0; }
-        if (fy === void 0) { fy = 0; }
-        if (collision === void 0) { collision = false; }
-        if (showHitBox === void 0) { showHitBox = false; }
-        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
-        if (onDamage === void 0) { onDamage = function () { }; }
-        if (onDeath === void 0) { onDeath = function () { }; }
+class GameElement {
+    /**
+     * constructeur de GameElement
+     * @param width - la largeur de l'objet
+     * @param height - la hauteur de l'objet
+     * @param x - l'absice de l'objet
+     * @param y - l'ordonée de l'objet
+     * @param life - la vie de l'objet
+     * @param style - le style de l'objet
+     * @param fx - la force y de l'objet
+     * @param fy - la force x de l'objet
+     * @param collision - indique si l'objet recevra des collisions
+     * @param showHitBox - indique si la hitbox de l'objet doit être afficher
+     * @param hitBoxColor - la couleure de la hitbox
+     * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
+     * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
+     */
+    constructor(width, height, x, y, life, style, fx = 0, fy = 0, collision = false, showHitBox = false, hitBoxColor = rgb.random(), onDamage = function () { }, onDeath = function () { }) {
+        /**
+         * dit si l'objet aura des collsions
+         */
         this.collision = false;
-        //definition des proprierter et verrification de type et de valeur si besoin
         this.width = width;
         this.height = height;
         this.x = x;
@@ -54,8 +65,7 @@ var GameElement = /** @class */ (function () {
         if (this.style.type === 'path') {
             if (this.style.points === undefined)
                 throw new TypeError('GameElement, you must provide points when you use a path style type');
-            for (var _i = 0, _a = this.style.points; _i < _a.length; _i++) {
-                var i = _a[_i];
+            for (let i of this.style.points) {
                 if (i.length !== 2)
                     throw new TypeError('GameElement, the points array is an array of array of numbers with a length of two');
             }
@@ -69,8 +79,7 @@ var GameElement = /** @class */ (function () {
      * dessine l'element
      * @param ctx - le context sur lequel dessiner.
      */
-    GameElement.prototype.draw = function (ctx) {
-        //si son type de style est un rectangle
+    draw(ctx) {
         if (this.showHitBox) {
             ctx.save();
             ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
@@ -78,13 +87,13 @@ var GameElement = /** @class */ (function () {
             ctx.restore();
         }
         if (this.style.type === 'rectangle') {
-            var color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
+            let color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
             ctx.fillStyle = color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
         else if (this.style.type === 'image') {
-            var resizeIMG = this.style.resiveIMG === undefined ? true : this.style.resiveIMG;
-            var img = pathToImage(this.style.IMGPath);
+            let resizeIMG = this.style.resiveIMG === undefined ? true : this.style.resiveIMG;
+            let img = pathToImage(this.style.IMGPath);
             if (resizeIMG) {
                 ctx.drawImage(img, this.x, this.y, this.width, this.height);
             }
@@ -93,40 +102,38 @@ var GameElement = /** @class */ (function () {
             }
         }
         else if (this.style.type === 'path') {
-            var color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
+            let color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
             ctx.fillStyle = color;
             ctx.strokeStyle = color;
-            var points = [];
-            var temp_points = this.style.points;
-            for (var _i = 0, temp_points_1 = temp_points; _i < temp_points_1.length; _i++) {
-                var i = temp_points_1[_i];
-                var temp_array = [0, 0];
+            let points = [];
+            let temp_points = this.style.points;
+            for (let i of temp_points) {
+                let temp_array = [0, 0];
                 temp_array[0] = ((i[0] / 100) * this.width) + this.x;
                 temp_array[1] = ((i[1] / 100) * this.height) + this.y;
                 points.push(temp_array);
             }
-            var p = points;
+            let p = points;
             ctx.beginPath();
-            ctx.moveTo.apply(ctx, p[0]);
-            ctx.lineTo.apply(ctx, p[0]);
-            for (var _a = 0, p_1 = p; _a < p_1.length; _a++) {
-                var i = p_1[_a];
-                ctx.lineTo.apply(ctx, i);
+            ctx.moveTo(...p[0]);
+            ctx.lineTo(...p[0]);
+            for (let i of p) {
+                ctx.lineTo(...i);
             }
-            var closePath = this.style.closePath === undefined ? true : this.style.closePath;
+            let closePath = this.style.closePath === undefined ? true : this.style.closePath;
             if (closePath)
-                ctx.lineTo.apply(ctx, p[0]);
+                ctx.lineTo(...p[0]);
             ctx.stroke();
-            var fill = this.style.fill === undefined ? false : this.style.fill;
+            let fill = this.style.fill === undefined ? false : this.style.fill;
             if (fill)
                 ctx.fill();
             ctx.closePath();
-            var showPoints = this.style.showPoints === undefined ? false : this.style.showPoints;
+            let showPoints = this.style.showPoints === undefined ? false : this.style.showPoints;
             if (showPoints) {
-                for (var i = 0; i < p.length; i++) {
-                    var e = p[i];
-                    var color_1 = 'hsl(' + (i * (255 / p.length)) + ', 100%, 50%)';
-                    ctx.fillStyle = color_1;
+                for (let i = 0; i < p.length; i++) {
+                    const e = p[i];
+                    const color = 'hsl(' + (i * (255 / p.length)) + ', 100%, 50%)';
+                    ctx.fillStyle = color;
                     ctx.beginPath();
                     ctx.arc(e[0], e[1], 5, 0, Math.PI * 2);
                     ctx.font = '15px Arial';
@@ -137,27 +144,47 @@ var GameElement = /** @class */ (function () {
                 }
             }
         }
-    };
-    GameElement.prototype.move = function () {
+    }
+    /**
+     * fait bouger l'lement selon les forces x et y qu'il a
+     */
+    move() {
         this.x += this.fx;
         this.y += this.fy;
-    };
-    GameElement.prototype.touch = function (gameElement, detail) {
+    }
+    /**
+     * retourne un boolean ou une detailTouchInterface indiquant si l'element touche oui ou non l'element passé en parametre
+     * @param gameElement - l'element testé
+     * @param detail - boolean disant si la foction va retourné une detailTouchInteface, ou just boolean, la detailTouchInterface indiquera plus de details que just le boolean
+     */
+    touch(gameElement, detail) {
         return GameElement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
-    };
-    GameElement.touch = function (width, height, x, y, gWidth, gHeight, gX, gY, detail) {
-        var X = false;
-        var Y = false;
+    }
+    /**
+     * retourne un boolean ou une detailTouchInterface indiquant si dans la cas ou il y aurait des element avec les largeurs, heuteurs, ordonées et abscices fourni en parametre ils se toucherait
+     * @param width - la largeure de l'element 1
+     * @param height - la hauteure de l'element 1
+     * @param x - l'abscice de l'element 1
+     * @param y - l'ordonée de l'element 1
+     * @param gWidth - la largeure de l'element 2
+     * @param gHeight - la hauteure de l'element 2
+     * @param gX - l'abscice de l'element 2
+     * @param gY - l'ordonée de l'element 2
+     * @param detail - boolean disant si la foction va retourné une detailTouchInteface, ou just boolean, la detailTouchInterface indiquera plus de details que just le boolean
+     */
+    static touch(width, height, x, y, gWidth, gHeight, gX, gY, detail) {
+        let X = false;
+        let Y = false;
         if (gX <= width + x && gX + gWidth >= x)
             X = true;
         if (gY <= height + y && gY + gHeight >= y)
             Y = true;
         if (detail) {
-            var face = Face.top;
-            var superposed = (x === gX + gWidth || x + width === gX || y === gY + gHeight || y + height === gY);
+            let face = Face.top;
+            let superposed = (x === gX + gWidth || x + width === gX || y === gY + gHeight || y + height === gY);
             superposed = superposed ? false : true;
-            var collideLarg = (gX + gWidth <= width + x ? gWidth + gX : x + width) - (gX >= x ? gX : x);
-            var collideLong = (gY + gHeight <= y + height ? gY + gHeight : y + height) - (gY >= y ? gY : y);
+            let collideLarg = (gX + gWidth <= width + x ? gWidth + gX : x + width) - (gX >= x ? gX : x);
+            let collideLong = (gY + gHeight <= y + height ? gY + gHeight : y + height) - (gY >= y ? gY : y);
             if (collideLarg >= collideLong) {
                 if (y + (height / 2) <= gY + (gHeight / 2)) {
                     face = Face.top;
@@ -174,118 +201,169 @@ var GameElement = /** @class */ (function () {
                     face = Face.right;
                 }
             }
-            var res_1 = {
+            let res = {
                 res: X && Y,
                 face: face,
                 superposed: superposed
             };
-            return res_1;
+            return res;
         }
-        var res = X && Y;
+        let res = X && Y;
         return res;
-    };
-    return GameElement;
-}());
-var CollisionObjects = [];
+    }
+}
+/**
+ * les objets a collisions que les GameEntity et autre devront prendre en compte
+ */
+const CollisionObjects = [];
+/**
+ * les Orientations
+ */
 var Orientation;
 (function (Orientation) {
+    /**
+     * l'orientation a gauche
+     */
     Orientation[Orientation["left"] = 0] = "left";
+    /**
+     * l'orientation a droite
+     */
     Orientation[Orientation["right"] = 1] = "right";
 })(Orientation || (Orientation = {}));
+/**
+ * les actions
+ */
 var Actions;
 (function (Actions) {
+    /**
+     * l'action de sauter
+     */
     Actions[Actions["jumping"] = 0] = "jumping";
+    /**
+     * l'action de marcher
+     */
     Actions[Actions["walking"] = 1] = "walking";
+    /**
+     * l'action d'attaquer
+     */
     Actions[Actions["attacking"] = 2] = "attacking";
+    /**
+     * l'action de ne rien faire
+     */
     Actions[Actions["nothing"] = 3] = "nothing";
 })(Actions || (Actions = {}));
-var GameEntity = /** @class */ (function (_super) {
-    __extends(GameEntity, _super);
-    function GameEntity(width, height, x, y, life, sprites, fx, fy, orientation, showHitBox, hitBoxColor, onDamage, onDeath) {
-        if (fx === void 0) { fx = 0; }
-        if (fy === void 0) { fy = 0; }
-        if (orientation === void 0) { orientation = Orientation.right; }
-        if (showHitBox === void 0) { showHitBox = false; }
-        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
-        if (onDamage === void 0) { onDamage = function () { }; }
-        if (onDeath === void 0) { onDeath = function () { }; }
-        var _this = _super.call(this, width, height, x, y, life, {
+/**
+ * les entités vivantes du jeu
+ */
+class GameEntity extends GameElement {
+    /**
+     *
+     * @param width - la largeur de l'entité
+     * @param height - la hauteur de l'entité
+     * @param x - l'absice de l'entité
+     * @param y - l'ordonée de l'entité
+     * @param life - la vie de lantité
+     * @param sprites - les sprites de l'entité
+     * @param fx  - la force x de lentité
+     * @param fy - la force y de l'entité
+     * @param orientation - l'orientation de l'entité
+     * @param showHitBox - boolean indiquant si la hit box de l'entité doit être affiché
+     * @param hitBoxColor - la couleure de la hitbox de l'entité
+     * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
+     * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
+     */
+    constructor(width, height, x, y, life, sprites, fx = 0, fy = 0, orientation = Orientation.right, showHitBox = false, hitBoxColor = rgb.random(), onDamage = function () { }, onDeath = function () { }) {
+        super(width, height, x, y, life, {
             type: 'image',
             IMGPath: ''
-        }, fx, fy, false, showHitBox, hitBoxColor, onDamage, onDeath) || this;
-        _this.animeFrame = 0;
-        _this.maxAnimeFrame = 0;
-        _this.lastAnimeFrame = null;
-        _this.fj = 0;
-        _this.isJumping = false;
-        _this.gravity = 0;
-        _this.orientation = orientation;
-        _this.isWalking = false;
-        var walkingSprites = {
+        }, fx, fy, false, showHitBox, hitBoxColor, onDamage, onDeath);
+        /**
+         * la frame ou en est arrivé l'animation
+         */
+        this.animeFrame = 0;
+        /**
+         * le nombre total de frame dans l'animation
+         */
+        this.maxAnimeFrame = 0;
+        /**
+         * la date du dernier moment ou l'entité a été animé
+         */
+        this.lastAnimeFrame = null;
+        /**
+         * la force de saut de l'entité
+         */
+        this.fj = 0;
+        /**
+         * boolean indiquant si l'entité est entrain de sauté
+         */
+        this.isJumping = false;
+        /**
+         * la gravité de lentité
+         */
+        this.gravity = 0;
+        this.orientation = orientation;
+        this.isWalking = false;
+        let walkingSprites = {
             left: [],
             right: []
         };
-        var jumpingSprites = {
+        let jumpingSprites = {
             left: [],
             right: []
         };
-        var attackingSprites = {
+        let attackingSprites = {
             left: [],
             right: []
         };
-        var nothingSprites = {
+        let nothingSprites = {
             left: [],
             right: []
         };
-        for (var _i = 0, _a = sprites.walking.spritesPath; _i < _a.length; _i++) {
-            var i = _a[_i];
-            var imgR = pathToImage(i);
-            var imgL = rotateImageOnYaxis(imgR);
+        for (let i of sprites.walking.spritesPath) {
+            let imgR = pathToImage(i);
+            let imgL = rotateImageOnYaxis(imgR);
             walkingSprites.left.push(imgL);
             walkingSprites.right.push(imgR);
         }
-        var walkingSpritesTime = Math.round((walkingSprites.right.length / sprites.walking.animeTime) * GameEntity.maxAnimeTime);
-        for (var i = 1; i < walkingSpritesTime; i++) {
+        let walkingSpritesTime = Math.round((walkingSprites.right.length / sprites.walking.animeTime) * GameEntity.maxAnimeTime);
+        for (let i = 1; i < walkingSpritesTime; i++) {
             walkingSprites.left.push(walkingSprites.left[i - 1]);
             walkingSprites.right.push(walkingSprites.right[i - 1]);
         }
-        for (var _b = 0, _c = sprites.jumping.spritesPath; _b < _c.length; _b++) {
-            var i = _c[_b];
-            var imgR = pathToImage(i);
-            var imgL = rotateImageOnYaxis(imgR);
+        for (let i of sprites.jumping.spritesPath) {
+            let imgR = pathToImage(i);
+            let imgL = rotateImageOnYaxis(imgR);
             jumpingSprites.left.push(imgL);
             jumpingSprites.right.push(imgR);
         }
-        var jumpingSpritesTime = Math.round((jumpingSprites.right.length / sprites.jumping.animeTime) * GameEntity.maxAnimeTime);
-        for (var i = 1; i < jumpingSpritesTime; i++) {
+        let jumpingSpritesTime = Math.round((jumpingSprites.right.length / sprites.jumping.animeTime) * GameEntity.maxAnimeTime);
+        for (let i = 1; i < jumpingSpritesTime; i++) {
             jumpingSprites.left.push(jumpingSprites.left[i - 1]);
             jumpingSprites.right.push(jumpingSprites.right[i - 1]);
         }
-        for (var _d = 0, _e = sprites.attacking.spritesPath; _d < _e.length; _d++) {
-            var i = _e[_d];
-            var imgR = pathToImage(i);
-            var imgL = rotateImageOnYaxis(imgR);
+        for (let i of sprites.attacking.spritesPath) {
+            let imgR = pathToImage(i);
+            let imgL = rotateImageOnYaxis(imgR);
             attackingSprites.left.push(imgL);
             attackingSprites.right.push(imgR);
         }
-        var attackingSpritesTime = Math.round((attackingSprites.right.length / sprites.attacking.animeTime) * GameEntity.maxAnimeTime);
-        for (var i = 1; i < attackingSpritesTime; i++) {
+        let attackingSpritesTime = Math.round((attackingSprites.right.length / sprites.attacking.animeTime) * GameEntity.maxAnimeTime);
+        for (let i = 1; i < attackingSpritesTime; i++) {
             attackingSprites.left.push(attackingSprites.left[i - 1]);
             attackingSprites.right.push(attackingSprites.right[i - 1]);
         }
-        for (var _f = 0, _g = sprites.nothing.spritesPath; _f < _g.length; _f++) {
-            var i = _g[_f];
-            var imgR = pathToImage(i);
-            var imgL = rotateImageOnYaxis(imgR);
+        for (let i of sprites.nothing.spritesPath) {
+            let imgR = pathToImage(i);
+            let imgL = rotateImageOnYaxis(imgR);
             nothingSprites.left.push(imgL);
             nothingSprites.right.push(imgR);
         }
-        var nothingSpritesTime = Math.round((nothingSprites.right.length / sprites.nothing.animeTime) * GameEntity.maxAnimeTime);
-        for (var i = 1; i < nothingSpritesTime; i++) {
+        let nothingSpritesTime = Math.round((nothingSprites.right.length / sprites.nothing.animeTime) * GameEntity.maxAnimeTime);
+        for (let i = 1; i < nothingSpritesTime; i++) {
             nothingSprites.left.push(nothingSprites.left[i - 1]);
             nothingSprites.right.push(nothingSprites.right[i - 1]);
         }
-        _this.sprites = {
+        this.sprites = {
             walking: {
                 sprites: walkingSprites,
                 animeTime: sprites.walking.animeTime
@@ -303,30 +381,32 @@ var GameEntity = /** @class */ (function (_super) {
                 animeTime: sprites.nothing.animeTime
             }
         };
-        _this.action = Actions.nothing;
-        _this._sprite = new Image();
-        _this.anime();
-        return _this;
+        this.action = Actions.nothing;
+        this._sprite = new Image();
+        this.anime();
     }
-    Object.defineProperty(GameEntity.prototype, "sprite", {
-        get: function () {
-            return this._sprite;
-        },
-        set: function (value) {
-            this._sprite = value;
-            this.style.IMGPath = value.src;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    GameEntity.prototype.setAction = function (action) {
+    set sprite(value) {
+        this._sprite = value;
+        this.style.IMGPath = value.src;
+    }
+    get sprite() {
+        return this._sprite;
+    }
+    /**
+     * defini l'action de l'entité et remet a zero l'animatione autre
+     * @param action l'action de l'entité
+     */
+    setAction(action) {
         this.action = action;
         this.animeFrame = 0;
         this.lastAnimeFrame = null;
-    };
-    GameEntity.prototype.anime = function () {
+    }
+    /**
+     * change le sprites de l'entité pour qu'ile s'anime (a utilisé en boucle)
+     */
+    anime() {
         if (this.lastAnimeFrame instanceof Date) {
-            var len = 1;
+            let len = 1;
             switch (this.action) {
                 case Actions.nothing:
                     len = this.sprites.nothing.sprites.right.length;
@@ -341,7 +421,7 @@ var GameEntity = /** @class */ (function (_super) {
                     len = this.sprites.jumping.sprites.right.length;
                     break;
             }
-            var time = GameEntity.maxAnimeTime / len;
+            let time = GameEntity.maxAnimeTime / len;
             if (new Date().getTime() - this.lastAnimeFrame.getTime() < time)
                 return;
         }
@@ -385,72 +465,60 @@ var GameEntity = /** @class */ (function (_super) {
         }
         this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
         this.lastAnimeFrame = new Date();
-    };
-    GameEntity.prototype.jump = function (power) {
-        if (power === void 0) { power = 50; }
+    }
+    /**
+     * fait sauté l'entité
+     * @param power la puissance du saut de l'entité
+     */
+    jump(power = 50) {
         if (this.isJumping)
             return;
         this.fj = Math.abs(power);
         this.isJumping = true;
-    };
-    GameEntity.prototype.attack = function () {
+    }
+    /**
+     * fait attacké l'entité (a redefinire)
+     */
+    attack() {
         return console.warn('attack is not defined');
-    };
-    GameEntity.prototype.move = function () {
-        var nfy = 25;
-        var ngr = 1;
-        var collisions = [];
-        for (var _i = 0, CollisionObjects_1 = CollisionObjects; _i < CollisionObjects_1.length; _i++) {
-            var c = CollisionObjects_1[_i];
+    }
+    /**
+     * fait bougé l'entité selon ses forces x et y en applicants les coliisions et la gravité
+     */
+    move() {
+        const nfy = 25;
+        const ngr = 1;
+        let collisions = [];
+        for (let c of CollisionObjects) {
             collisions.push(this.touch(c, true));
         }
-        var touchGround = false;
-        for (var _a = 0, collisions_1 = collisions; _a < collisions_1.length; _a++) {
-            var c = collisions_1[_a];
+        let touchGround = false;
+        for (let c of collisions) {
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
-        var ffx = null;
-        var ffy = null;
-        var fff = false;
-        /*for(let i = 0;i < this.fy;i++) {
-            let r = this.fx / this.fy;
-            let t :detailTouchInterface = {
-                res: false,
-                superposed: false,
-                face : Face.bottom
-            };
-            for(let c of CollisionObjects) {
-                t = GameElement.touch(this.width, this.height, this.x + i * r, this.y + i, c.width, c.height, c.x, c.y, true);
-                if (t.res && !t.superposed) break;
-            }
-
-            if (t.res && !t.superposed) {
-                ffx = i*r;
-                ffy = i;
-                fff = true;
-                break;
-            }
-        }*/
+        let ffx = null;
+        let ffy = null;
+        let fff = false;
         this.y += fff && ffy !== null ? ffy : this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
         this.x += fff && ffx !== null ? ffx : this.fx;
         collisions = [];
-        for (var _b = 0, CollisionObjects_2 = CollisionObjects; _b < CollisionObjects_2.length; _b++) {
-            var c = CollisionObjects_2[_b];
+        for (let c of CollisionObjects) {
             collisions.push(this.touch(c, true));
         }
         for (let c of collisions) {
             if (c.res && c.face === Face.left && c.superposed) {
                 this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
-            } else if (c.res && c.face === Face.right && c.superposed) {
+            }
+            else if (c.res && c.face === Face.right && c.superposed) {
                 this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
-            } else if (c.res && c.face === Face.top && c.superposed) {
+            }
+            else if (c.res && c.face === Face.top && c.superposed) {
                 this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
             }
         }
         touchGround = false;
-        for (var _c = 0, collisions_2 = collisions; _c < collisions_2.length; _c++) {
-            var c = collisions_2[_c];
+        for (let c of collisions) {
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
@@ -459,8 +527,7 @@ var GameEntity = /** @class */ (function (_super) {
         if (this.fj > 0) {
             this.fj -= this.gravity;
             this.gravity += 1;
-            for (var _d = 0, collisions_3 = collisions; _d < collisions_3.length; _d++) {
-                var c = collisions_3[_d];
+            for (let c of collisions) {
                 if (c.res && c.face === Face.bottom && c.superposed) {
                     this.fj = -1;
                     this.y = CollisionObjects[collisions.indexOf(c)].y + CollisionObjects[collisions.indexOf(c)].height;
@@ -482,54 +549,86 @@ var GameEntity = /** @class */ (function (_super) {
                 this.gravity = ngr;
             }
         }
-        for (var _e = 0, collisions_4 = collisions; _e < collisions_4.length; _e++) {
-            var c = collisions_4[_e];
+        for (let c of collisions) {
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
         if (touchGround) {
             this.isJumping = false;
         }
-    };
-    GameEntity.maxAnimeTime = 10000;
-    return GameEntity;
-}(GameElement));
-var GameMovingElement = /** @class */ (function (_super) {
-    __extends(GameMovingElement, _super);
-    function GameMovingElement(width, height, x, y, style, fx, fy, life, showHitBox, hitBoxColor) {
-        if (fx === void 0) { fx = 0; }
-        if (fy === void 0) { fy = 0; }
-        if (life === void 0) { life = 1; }
-        if (showHitBox === void 0) { showHitBox = false; }
-        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
-        var _this = _super.call(this, width, height, x, y, life, { type: 'rectangle', color: 'black' }, fx, fy, false, showHitBox, hitBoxColor) || this;
-        _this.sprites = null;
-        _this.deathSprites = null;
-        _this.lastAnimeFrame = null;
-        _this.animeFrame = 0;
-        _this.maxAnimeFrame = 0.;
-        _this._sprite = new Image();
-        _this.isAlive = true;
-        _this.movingStyle = style;
-        if (_this.movingStyle.type === 'sprites') {
-            _this.sprites = [];
-            if (_this.movingStyle.spritesPath === undefined)
+    }
+}
+/**
+ * la duré maximal d'animaation
+ */
+GameEntity.maxAnimeTime = 10000;
+/**
+ * les entité servent au attaques et autre
+ */
+class GameMovingElement extends GameElement {
+    /**
+     *
+     * @param width - la largeur de l'entité
+     * @param height - la hauteur de l'entité
+     * @param x - l'absice de l'entité
+     * @param y - l'ordonée de l'entité
+     * @param fx  - la force x de lentité
+     * @param fy - la force y de l'entité
+     * @param life - la vie de lantité
+     * @param showHitBox - bolean indiquant si la hitbox de l'entité doit êter afficher
+     * @param hitBoxColor - la couelure de la hitbox
+     */
+    constructor(width, height, x, y, style, fx = 0, fy = 0, life = 1, showHitBox = false, hitBoxColor = rgb.random()) {
+        super(width, height, x, y, life, { type: 'rectangle', color: 'black' }, fx, fy, false, showHitBox, hitBoxColor);
+        /**
+         * les sprites de l'entité
+         */
+        this.sprites = null;
+        /**
+         * les sprites de l'animation de la mort de l'entité
+         */
+        this.deathSprites = null;
+        /**
+         * la date du dernier moment ou l'entité a été animé
+         */
+        this.lastAnimeFrame = null;
+        /**
+         * la frame ou en est arrivé l'animation
+         */
+        this.animeFrame = 0;
+        /**
+         * le nombre total de frame de l'animation
+         */
+        this.maxAnimeFrame = 0;
+        /**
+         * le sprite actuelle de l'animation
+         */
+        this._sprite = new Image();
+        /**
+         * bolean indiquant si l'entité est en vie
+         */
+        this.isAlive = true;
+        this.movingStyle = style;
+        if (this.movingStyle.type === 'sprites') {
+            this.sprites = [];
+            if (this.movingStyle.spritesPath === undefined)
                 throw new TypeError('GameMovingElement, spritesPath must be defined if type is sprites');
-            for (var _i = 0, _a = _this.movingStyle.spritesPath; _i < _a.length; _i++) {
-                var i = _a[_i];
-                _this.sprites.push(pathToImage(i));
+            for (let i of this.movingStyle.spritesPath) {
+                this.sprites.push(pathToImage(i));
             }
-            if (_this.movingStyle.onDeathSpritesPath !== undefined) {
-                _this.deathSprites = [];
-                for (var _b = 0, _c = _this.movingStyle.onDeathSpritesPath; _b < _c.length; _b++) {
-                    var i = _c[_b];
-                    _this.deathSprites.push(pathToImage(i));
+            if (this.movingStyle.onDeathSpritesPath !== undefined) {
+                this.deathSprites = [];
+                for (let i of this.movingStyle.onDeathSpritesPath) {
+                    this.deathSprites.push(pathToImage(i));
                 }
             }
         }
-        return _this;
     }
-    GameMovingElement.prototype.draw = function (ctx) {
+    /**
+     * dessine l'élement
+     * @param ctx - le context sur lequelle m'element doit être dessiné
+     */
+    draw(ctx) {
         if (this.showHitBox) {
             ctx.save();
             ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
@@ -537,45 +636,43 @@ var GameMovingElement = /** @class */ (function (_super) {
             ctx.restore();
         }
         if (this.movingStyle.type === 'rectangle') {
-            var color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            let color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
             ctx.fillStyle = color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
         else if (this.movingStyle.type === 'path') {
-            var color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            let color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
             ctx.fillStyle = color;
             ctx.strokeStyle = color;
-            var points = [];
-            var temp_points = this.movingStyle.points;
-            for (var _i = 0, temp_points_2 = temp_points; _i < temp_points_2.length; _i++) {
-                var i = temp_points_2[_i];
-                var temp_array = [0, 0];
+            let points = [];
+            let temp_points = this.movingStyle.points;
+            for (let i of temp_points) {
+                let temp_array = [0, 0];
                 temp_array[0] = ((i[0] / 100) * this.width) + this.x;
                 temp_array[1] = ((i[1] / 100) * this.height) + this.y;
                 points.push(temp_array);
             }
-            var p = points;
+            let p = points;
             ctx.beginPath();
-            ctx.moveTo.apply(ctx, p[0]);
-            ctx.lineTo.apply(ctx, p[0]);
-            for (var _a = 0, p_2 = p; _a < p_2.length; _a++) {
-                var i = p_2[_a];
-                ctx.lineTo.apply(ctx, i);
+            ctx.moveTo(...p[0]);
+            ctx.lineTo(...p[0]);
+            for (let i of p) {
+                ctx.lineTo(...i);
             }
-            var closePath = this.movingStyle.closePath === undefined ? true : this.movingStyle.closePath;
+            let closePath = this.movingStyle.closePath === undefined ? true : this.movingStyle.closePath;
             if (closePath)
-                ctx.lineTo.apply(ctx, p[0]);
+                ctx.lineTo(...p[0]);
             ctx.stroke();
-            var fill = this.movingStyle.fill === undefined ? false : this.movingStyle.fill;
+            let fill = this.movingStyle.fill === undefined ? false : this.movingStyle.fill;
             if (fill)
                 ctx.fill();
             ctx.closePath();
-            var showPoints = this.movingStyle.showPoints === undefined ? false : this.movingStyle.showPoints;
+            let showPoints = this.movingStyle.showPoints === undefined ? false : this.movingStyle.showPoints;
             if (showPoints) {
-                for (var i = 0; i < p.length; i++) {
-                    var e = p[i];
-                    var color_2 = 'hsl(' + (i * (255 / p.length)) + ', 100%, 50%)';
-                    ctx.fillStyle = color_2;
+                for (let i = 0; i < p.length; i++) {
+                    const e = p[i];
+                    const color = 'hsl(' + (i * (255 / p.length)) + ', 100%, 50%)';
+                    ctx.fillStyle = color;
                     ctx.beginPath();
                     ctx.arc(e[0], e[1], 5, 0, Math.PI * 2);
                     ctx.font = '15px Arial';
@@ -594,21 +691,24 @@ var GameMovingElement = /** @class */ (function (_super) {
                 ctx.drawImage(this._sprite, this.x, this.y);
             }
         }
-    };
-    GameMovingElement.prototype.anime = function () {
+    }
+    /**
+     * change le sprites de l'entité pour qu'ile s'anime (a utilisé en boucle)
+     */
+    anime() {
         if (this.movingStyle.type !== 'sprites')
             return;
         if (this.sprites === null)
             return;
         if (this.lastAnimeFrame instanceof Date) {
-            var len = 1;
+            let len = 1;
             if (this.isAlive)
                 len = this.sprites.length;
             else if (this.deathSprites !== null)
                 len = this.deathSprites.length;
             if (this.movingStyle.animeTime === undefined)
                 this.movingStyle.animeTime = 100;
-            var time = this.movingStyle.animeTime;
+            let time = this.movingStyle.animeTime;
             if (new Date().getTime() - this.lastAnimeFrame.getTime() < time)
                 return;
         }
@@ -626,23 +726,35 @@ var GameMovingElement = /** @class */ (function (_super) {
             this.maxAnimeFrame = 0;
         this.animeFrame = this.animeFrame >= this.maxAnimeFrame ? 1 : this.animeFrame + 1;
         this.lastAnimeFrame = new Date();
-    };
-    GameMovingElement.prototype.kill = function () {
+    }
+    /**
+     * tue l'element
+     */
+    kill() {
         this.life = 0;
         this.isAlive = false;
         this.lastAnimeFrame = null;
         this.animeFrame = 0;
         this.anime();
-    };
-    GameMovingElement.maxAnimeTime = 10000;
-    return GameMovingElement;
-}(GameElement));
-var Player = /** @class */ (function (_super) {
-    __extends(Player, _super);
-    function Player(x, y, showHitBox, hitBoxColor) {
-        if (showHitBox === void 0) { showHitBox = false; }
-        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
-        return _super.call(this, 68.75, 93.75, x, y, 10, {
+    }
+}
+/**
+ * la duré maximal d'animaation
+ */
+GameMovingElement.maxAnimeTime = 10000;
+/**
+ * la class de joueure
+ */
+class Player extends GameEntity {
+    /**
+     * crée un nouvean joueure
+     * @param x - l'absice du joueure
+     * @param y - l'ordoné du joueure
+     * @param showHitBox - boolean indiquan si la hitbox du joueure doit être afficher
+     * @param hitBoxColor - la couleure de la hitbox
+     */
+    constructor(x, y, showHitBox = false, hitBoxColor = rgb.random()) {
+        super(68.75, 93.75, x, y, 10, {
             walking: {
                 spritesPath: [
                     "./images/sprites/player/walk/0.png",
@@ -670,17 +782,20 @@ var Player = /** @class */ (function (_super) {
                 ],
                 animeTime: 1000
             }
-        }, 0, 0, Orientation.right, showHitBox, hitBoxColor) || this;
+        }, 0, 0, Orientation.right, showHitBox, hitBoxColor);
     }
-    Player.prototype.draw = function (ctx) {
+    /**
+     * dessine le joueure
+     * @param ctx - le context sur le quelle dessiner le joueure
+     */
+    draw(ctx) {
         if (this.showHitBox) {
             ctx.save();
             ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.restore();
         }
-        var y = 1;
+        let y = 1;
         ctx.drawImage(pathToImage(this.style.IMGPath || ''), 5, y, 22, 32 - (y), this.x, this.y, this.width, this.height);
-    };
-    return Player;
-}(GameEntity));
+    }
+}

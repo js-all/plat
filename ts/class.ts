@@ -73,7 +73,6 @@ enum Face {
      */
     bottom
 }
-
 /**
  * @class les elements du jeu
  */
@@ -408,7 +407,6 @@ interface GameEntityTrueActionSpriteInterface {
      * la duré de l'animation
      */
     animeTime: number
-
 }
 /**
  * l'interface des sprites de GameEntityTrueActionSpriteInterface

@@ -676,23 +676,46 @@ class GameEntity extends GameElement {
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
         }
+        if(touchGround) this.fy  = 0;
+        console.log(touchGround);
+        
         let ffx: number | null = null;
         let ffy: number | null = null;
         let fff = false;
+        let fc :"fy" | "fx" = Math.abs(this.fy) >= Math.abs(this.fx) ? "fy" : "fx";
+        for(let i = 0;i < Math.abs(this[fc]);i++) {
+            let cfc : "fy" | "fx" = fc === 'fy' ? 'fx' : 'fy';
+            let r = this[cfc] / this[fc];
+            let tt :detailTouchInterface | null = null;
+            let x = fc === 'fy' ? (this.fy < 0 ? -i : i) * r : this.fx < 0 ? -i : i;
+            let y = fc === 'fx' ? (this.fx < 0 ? -i : i) * r : this.fy < 0 ? -i : i;
+            for(let c of CollisionObjects) {
+                let t = GameElement.touch(this.width, this.height, this.x + x, this.y + y, c.width, c.height, c.x, c.y, true);
+                if (t.res && t.superposed) {
+                    //console.log(this.fy);
+                    fff = true;
+                    tt = t;
+                    break;
+                }
+            }
+            if(fff && tt !== null) {
+                for (let c of collisions) {
+                    if (c.res && c.face === Face.left && c.superposed) {
+                        this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
+                    } else if (c.res && c.face === Face.right && c.superposed) {
+                        this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
+                    } else if (c.res && c.face === Face.top && c.superposed) {
+                        this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
+                    }
+                }
+                break;
+            }
+        } 
         this.y += fff && ffy !== null ? ffy : this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
         this.x += fff && ffx !== null ? ffx : this.fx;
         collisions = [];
         for (let c of CollisionObjects) {
             collisions.push(this.touch(c, true));
-        }
-        for (let c of collisions) {
-            if (c.res && c.face === Face.left && c.superposed) {
-                this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
-            } else if (c.res && c.face === Face.right && c.superposed) {
-                this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
-            } else if (c.res && c.face === Face.top && c.superposed) {
-                this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
-            }
         }
         touchGround = false;
         for (let c of collisions) {
@@ -942,6 +965,52 @@ class GameMovingElement extends GameElement {
         this.anime();
     }
 }
+class _M00 extends GameEntity {
+    constructor(x: number, y: number) {
+        super(100, 100, x, y, 2, {
+            walking: {
+                spritesPath: [
+                    './images/sprites/monsters/00/walking/0.png',
+                    './images/sprites/monsters/00/walking/1.png',
+                    './images/sprites/monsters/00/walking/2.png'
+                ],
+                animeTime: 500
+            },
+            jumping: {
+                spritesPath: [
+                    './images/sprites/monsters/00/jumping/0.png',
+                    './images/sprites/monsters/00/jumping/1.png'
+                ],
+                animeTime: 500
+            },
+            attacking: {
+                spritesPath: [
+                    './images/sprites/monsters/00/attacking/0.png',
+                    './images/sprites/monsters/00/attacking/1.png'
+                ],
+                animeTime: 1000
+            },
+            nothing: {
+                spritesPath: [
+                    './images/sprites/monsters/00/nothing/0.png',
+                    './images/sprites/monsters/00/nothing/1.png'
+                ],
+                animeTime: 1000
+            }
+        });
+        MonstersElement.push(this);
+    }
+    follow() {
+        const maxFX = 10;
+    }
+}
+const MonstersElement :GameEntity[] = []
+const Monster = {
+    Monsters: [
+        _M00
+    ],
+    Monbi: _M00
+}
 /**
  * la class de joueure
  */
@@ -957,22 +1026,22 @@ class Player extends GameEntity {
         super(68.75, 93.75, x, y, 10, {
             walking: {
                 spritesPath: [
-                    "./images/sprites/player/walk/0.png",
-                    "./images/sprites/player/walk/1.png",
-                    "./images/sprites/player/walk/2.png",
-                    "./images/sprites/player/walk/3.png"
+                    "./images/sprites/player/walking/0.png",
+                    "./images/sprites/player/walking/1.png",
+                    "./images/sprites/player/walking/2.png",
+                    "./images/sprites/player/walking/3.png"
                 ],
                 animeTime: 1000
             },
             jumping: {
                 spritesPath: [
-                    "./images/sprites/player/jump/0.png"
+                    "./images/sprites/player/jumping/0.png"
                 ],
                 animeTime: 1000
             },
             attacking: {
                 spritesPath: [
-                    "./images/sprites/player/attack/0.png"
+                    "./images/sprites/player/attacking/0.png"
                 ],
                 animeTime: 1000
             },

@@ -37,11 +37,15 @@ for(let i of CollisionObjects) {
     i.x += 250;
 }
 const player = new Player(250, 1050, true);
+const m0 = new _M00(250, 1050);
 
 player.setAction(Actions.walking);
 function draw(): void {
     ctx.clearRect(0, 0, cw, ch);
     for(let i of CollisionObjects) {
+        i.draw(ctx);
+    }
+    for(let i of MonstersElement) {
         i.draw(ctx);
     }
     player.draw(ctx);
@@ -50,6 +54,10 @@ function move(): void {
     player.anime();
     player.move();
     ground.move()
+    for(let i of MonstersElement) {
+        i.move();
+        i.anime()
+    }
     player.fx = 0;
     let actionUsed = false;
     if (player.isJumping && player.action !== Actions.jumping) player.setAction(Actions.jumping);

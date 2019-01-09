@@ -1,44 +1,51 @@
 "use strict";
-const canvas = document.createElement('canvas');
-const cw = 1500;
-const ch = 1500;
-const ctx = canvas.getContext('2d');
-const draw_rate = 30;
-const move_rate = 30;
-const activeKeys = [];
+var canvas = document.createElement('canvas');
+var cw = 1500;
+var ch = 1500;
+var ctx = canvas.getContext('2d');
+var draw_rate = 30;
+var move_rate = 30;
+var activeKeys = [];
 document.body.appendChild(canvas);
 canvas.width = cw;
 canvas.height = ch;
 ctx.imageSmoothingEnabled = false;
-const ground = new GameElement(1000 - 0, 100, 0, 900, 0, {
+var ground = new GameElement(1000 - 0, 100, 0, 900, 0, {
     type: "rectangle",
     color: rgb.green
 }, 0, 0, true);
-const wallRight = new GameElement(100, 1000 - 100, 1000 - 100, 0, 0, {
+var wallRight = new GameElement(100, 1000 - 100, 1000 - 100, 0, 0, {
     type: "rectangle",
     color: 'red'
 }, 0, 0, true);
-const wallLeft = new GameElement(100, 600, 0, 0, 0, {
+var wallLeft = new GameElement(100, 600, 0, 0, 0, {
     type: 'rectangle',
     color: 'pink'
 }, 0, 0, true);
-const plat1 = new GameElement(1000 / 3, 100, 0, 600, 0, {
+var plat1 = new GameElement(1000 / 3, 100, 0, 600, 0, {
     type: 'rectangle',
     color: 'orange'
 }, 0, 0, true);
-const plat2 = new GameElement(1000 / 3, 100, 1000 / 3 * 2 / 2, 300, 0, {
+var plat2 = new GameElement(1000 / 3, 100, 1000 / 3 * 2 / 2, 300, 0, {
     type: 'rectangle',
     color: 'blue'
 }, 0, 0, true);
-for (let i of CollisionObjects) {
+for (var _i = 0, CollisionObjects_1 = CollisionObjects; _i < CollisionObjects_1.length; _i++) {
+    var i = CollisionObjects_1[_i];
     i.y += 250;
     i.x += 250;
 }
-const player = new Player(250, 1050, true);
+var player = new Player(250, 1050, true);
+var m0 = new _M00(250, 1050);
 player.setAction(Actions.walking);
 function draw() {
     ctx.clearRect(0, 0, cw, ch);
-    for (let i of CollisionObjects) {
+    for (var _i = 0, CollisionObjects_2 = CollisionObjects; _i < CollisionObjects_2.length; _i++) {
+        var i = CollisionObjects_2[_i];
+        i.draw(ctx);
+    }
+    for (var _a = 0, MonstersElement_1 = MonstersElement; _a < MonstersElement_1.length; _a++) {
+        var i = MonstersElement_1[_a];
         i.draw(ctx);
     }
     player.draw(ctx);
@@ -47,11 +54,17 @@ function move() {
     player.anime();
     player.move();
     ground.move();
+    for (var _i = 0, MonstersElement_2 = MonstersElement; _i < MonstersElement_2.length; _i++) {
+        var i = MonstersElement_2[_i];
+        i.move();
+        i.anime();
+    }
     player.fx = 0;
-    let actionUsed = false;
+    var actionUsed = false;
     if (player.isJumping && player.action !== Actions.jumping)
         player.setAction(Actions.jumping);
-    for (let key of activeKeys) {
+    for (var _a = 0, activeKeys_1 = activeKeys; _a < activeKeys_1.length; _a++) {
+        var key = activeKeys_1[_a];
         switch (key) {
             case 37:
                 player.fx = -10;
@@ -84,9 +97,9 @@ function move() {
             player.setAction(Actions.nothing);
     }
 }
-const move_interval = setInterval(move, 1000 / move_rate);
-const draw_interval = setInterval(draw, 1000 / draw_rate);
-document.addEventListener('keydown', e => { if (activeKeys.indexOf(e.keyCode) === -1)
+var move_interval = setInterval(move, 1000 / move_rate);
+var draw_interval = setInterval(draw, 1000 / draw_rate);
+document.addEventListener('keydown', function (e) { if (activeKeys.indexOf(e.keyCode) === -1)
     activeKeys.push(e.keyCode); });
-document.addEventListener('keyup', e => { if (activeKeys.indexOf(e.keyCode) !== -1)
+document.addEventListener('keyup', function (e) { if (activeKeys.indexOf(e.keyCode) !== -1)
     activeKeys.splice(activeKeys.indexOf(e.keyCode), 1); });

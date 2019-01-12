@@ -85,8 +85,8 @@ var GameElement = /** @class */ (function () {
         if (this.style.type === 'path') {
             if (this.style.points === undefined)
                 throw new TypeError('GameElement, you must provide points when you use a path style type');
-            for (var _i = 0, _a = this.style.points; _i < _a.length; _i++) {
-                var i = _a[_i];
+            for (var _a = 0, _b = this.style.points; _a < _b.length; _a++) {
+                var i = _b[_a];
                 if (i.length !== 2)
                     throw new TypeError('GameElement, the points array is an array of array of numbers with a length of two');
             }
@@ -128,8 +128,8 @@ var GameElement = /** @class */ (function () {
             ctx.strokeStyle = color;
             var points = [];
             var temp_points = this.style.points;
-            for (var _i = 0, temp_points_1 = temp_points; _i < temp_points_1.length; _i++) {
-                var i = temp_points_1[_i];
+            for (var _a = 0, temp_points_1 = temp_points; _a < temp_points_1.length; _a++) {
+                var i = temp_points_1[_a];
                 var temp_array = [0, 0];
                 temp_array[0] = ((i[0] / 100) * this.width) + this.x;
                 temp_array[1] = ((i[1] / 100) * this.height) + this.y;
@@ -139,8 +139,8 @@ var GameElement = /** @class */ (function () {
             ctx.beginPath();
             ctx.moveTo.apply(ctx, p[0]);
             ctx.lineTo.apply(ctx, p[0]);
-            for (var _a = 0, p_1 = p; _a < p_1.length; _a++) {
-                var i = p_1[_a];
+            for (var _b = 0, p_1 = p; _b < p_1.length; _b++) {
+                var i = p_1[_b];
                 ctx.lineTo.apply(ctx, i);
             }
             var closePath = this.style.closePath === undefined ? true : this.style.closePath;
@@ -351,8 +351,8 @@ var GameEntity = /** @class */ (function (_super) {
             left: [],
             right: []
         };
-        for (var _i = 0, _a = sprites.walking.spritesPath; _i < _a.length; _i++) {
-            var i = _a[_i];
+        for (var _a = 0, _b = sprites.walking.spritesPath; _a < _b.length; _a++) {
+            var i = _b[_a];
             var imgR = pathToImage(i);
             var imgL = rotateImageOnYaxis(imgR);
             walkingSprites.left.push(imgL);
@@ -363,8 +363,8 @@ var GameEntity = /** @class */ (function (_super) {
             walkingSprites.left.push(walkingSprites.left[i - 1]);
             walkingSprites.right.push(walkingSprites.right[i - 1]);
         }
-        for (var _b = 0, _c = sprites.jumping.spritesPath; _b < _c.length; _b++) {
-            var i = _c[_b];
+        for (var _c = 0, _d = sprites.jumping.spritesPath; _c < _d.length; _c++) {
+            var i = _d[_c];
             var imgR = pathToImage(i);
             var imgL = rotateImageOnYaxis(imgR);
             jumpingSprites.left.push(imgL);
@@ -375,8 +375,8 @@ var GameEntity = /** @class */ (function (_super) {
             jumpingSprites.left.push(jumpingSprites.left[i - 1]);
             jumpingSprites.right.push(jumpingSprites.right[i - 1]);
         }
-        for (var _d = 0, _e = sprites.attacking.spritesPath; _d < _e.length; _d++) {
-            var i = _e[_d];
+        for (var _e = 0, _f = sprites.attacking.spritesPath; _e < _f.length; _e++) {
+            var i = _f[_e];
             var imgR = pathToImage(i);
             var imgL = rotateImageOnYaxis(imgR);
             attackingSprites.left.push(imgL);
@@ -387,8 +387,8 @@ var GameEntity = /** @class */ (function (_super) {
             attackingSprites.left.push(attackingSprites.left[i - 1]);
             attackingSprites.right.push(attackingSprites.right[i - 1]);
         }
-        for (var _f = 0, _g = sprites.nothing.spritesPath; _f < _g.length; _f++) {
-            var i = _g[_f];
+        for (var _g = 0, _h = sprites.nothing.spritesPath; _g < _h.length; _g++) {
+            var i = _h[_g];
             var imgR = pathToImage(i);
             var imgL = rotateImageOnYaxis(imgR);
             nothingSprites.left.push(imgL);
@@ -531,64 +531,65 @@ var GameEntity = /** @class */ (function (_super) {
         var nfy = 25;
         var ngr = 1;
         var collisions = [];
-        for (var _i = 0, CollisionObjects_1 = CollisionObjects; _i < CollisionObjects_1.length; _i++) {
-            var c = CollisionObjects_1[_i];
+        for (var _a = 0, CollisionObjects_1 = CollisionObjects; _a < CollisionObjects_1.length; _a++) {
+            var c = CollisionObjects_1[_a];
             collisions.push(this.touch(c, true));
         }
         var touchGround = false;
-        for (var _a = 0, collisions_1 = collisions; _a < collisions_1.length; _a++) {
-            var c = collisions_1[_a];
+        for (var _b = 0, collisions_1 = collisions; _b < collisions_1.length; _b++) {
+            var c = collisions_1[_b];
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
         if (touchGround)
             this.fy = 0;
-        console.log(touchGround);
-        var ffx = null;
-        var ffy = null;
         var fff = false;
-        var fc = Math.abs(this.fy) >= Math.abs(this.fx) ? "fy" : "fx";
-        for (var i = 0; i < Math.abs(this[fc]); i++) {
-            var cfc = fc === 'fy' ? 'fx' : 'fy';
-            var r = this[cfc] / this[fc];
-            var tt = null;
-            var x = fc === 'fy' ? (this.fy < 0 ? -i : i) * r : this.fx < 0 ? -i : i;
-            var y = fc === 'fx' ? (this.fx < 0 ? -i : i) * r : this.fy < 0 ? -i : i;
-            for (var _b = 0, CollisionObjects_2 = CollisionObjects; _b < CollisionObjects_2.length; _b++) {
-                var c = CollisionObjects_2[_b];
-                var t = GameElement.touch(this.width, this.height, this.x + x, this.y + y, c.width, c.height, c.x, c.y, true);
-                if (t.res && t.superposed) {
-                    //console.log(this.fy);
-                    fff = true;
-                    tt = t;
-                    break;
+        var winnerIndex = 0;
+        var _i = 0;
+        /*for (let c of CollisionObjects) {
+            const d = CollisionObjects[winnerIndex];
+            let Y, X = false;
+            if (this.fy > 0) {
+                if ((this.fy + this.height + this.y) - (c.y) > (this.fy + this.height + this.y) - (d.y) &&
+                    (c.y + c.height) - (this.y + this.height) < (d.y + d.height) - (this.y + this.height))
+                    Y = true;
+            } else if (this.fy <= 0) {
+                if ((c.height + c.y) - (this.fy + this.y) > (d.height + d.y) - (this.fy + this.y) &&
+                    (c.y) - (this.y + this.fy + this.height) > (d.y) - (this.y + this.fy + this.height))
+                    Y = true;
+            }
+            if (Y) {
+                if (this.fx > 0) {
+                    if (c.x + c.width >= this.x + this.width && c.x <= this.x + this.fx + this.width) X = true;
+                } else if (this.fx <= 0) {
+                    if (c.x <= this.x && c.x + c.width >= this.x + this.fx) X = true;
                 }
             }
-            if (fff && tt !== null) {
-                ffx = x;
-                ffy = y;
-                break;
-            }
-        }
-        this.y += fff && ffy !== null ? ffy : this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
-        this.x += fff && ffx !== null ? ffx : this.fx;
+            if (X && Y) winnerIndex = _i;
+            _i++;
+        }*/
+        this.y += this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
+        this.x += this.fx;
         collisions = [];
-        for (var _c = 0, CollisionObjects_3 = CollisionObjects; _c < CollisionObjects_3.length; _c++) {
-            var c = CollisionObjects_3[_c];
+        for (var _c = 0, CollisionObjects_2 = CollisionObjects; _c < CollisionObjects_2.length; _c++) {
+            var c = CollisionObjects_2[_c];
             collisions.push(this.touch(c, true));
         }
-        /*for (let c of collisions) {
-            if (c.res && c.face === Face.left && c.superposed) {
-                this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
-            } else if (c.res && c.face === Face.right && c.superposed) {
-                this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
-            } else if (c.res && c.face === Face.top && c.superposed) {
-                this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
-            }
-        }*/
-        touchGround = false;
         for (var _d = 0, collisions_2 = collisions; _d < collisions_2.length; _d++) {
             var c = collisions_2[_d];
+            if (c.res && c.face === Face.left && c.superposed) {
+                this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
+            }
+            else if (c.res && c.face === Face.right && c.superposed) {
+                this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
+            }
+            else if (c.res && c.face === Face.top && c.superposed) {
+                this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
+            }
+        }
+        touchGround = false;
+        for (var _e = 0, collisions_3 = collisions; _e < collisions_3.length; _e++) {
+            var c = collisions_3[_e];
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
@@ -597,8 +598,8 @@ var GameEntity = /** @class */ (function (_super) {
         if (this.fj > 0) {
             this.fj -= this.gravity;
             this.gravity += 1;
-            for (var _e = 0, collisions_3 = collisions; _e < collisions_3.length; _e++) {
-                var c = collisions_3[_e];
+            for (var _f = 0, collisions_4 = collisions; _f < collisions_4.length; _f++) {
+                var c = collisions_4[_f];
                 if (c.res && c.face === Face.bottom && c.superposed) {
                     this.fj = -1;
                     this.y = CollisionObjects[collisions.indexOf(c)].y + CollisionObjects[collisions.indexOf(c)].height;
@@ -620,8 +621,8 @@ var GameEntity = /** @class */ (function (_super) {
                 this.gravity = ngr;
             }
         }
-        for (var _f = 0, collisions_4 = collisions; _f < collisions_4.length; _f++) {
-            var c = collisions_4[_f];
+        for (var _g = 0, collisions_5 = collisions; _g < collisions_5.length; _g++) {
+            var c = collisions_5[_g];
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
@@ -692,14 +693,14 @@ var GameMovingElement = /** @class */ (function (_super) {
             _this.sprites = [];
             if (_this.movingStyle.spritesPath === undefined)
                 throw new TypeError('GameMovingElement, spritesPath must be defined if type is sprites');
-            for (var _i = 0, _a = _this.movingStyle.spritesPath; _i < _a.length; _i++) {
-                var i = _a[_i];
+            for (var _a = 0, _b = _this.movingStyle.spritesPath; _a < _b.length; _a++) {
+                var i = _b[_a];
                 _this.sprites.push(pathToImage(i));
             }
             if (_this.movingStyle.onDeathSpritesPath !== undefined) {
                 _this.deathSprites = [];
-                for (var _b = 0, _c = _this.movingStyle.onDeathSpritesPath; _b < _c.length; _b++) {
-                    var i = _c[_b];
+                for (var _c = 0, _d = _this.movingStyle.onDeathSpritesPath; _c < _d.length; _c++) {
+                    var i = _d[_c];
                     _this.deathSprites.push(pathToImage(i));
                 }
             }
@@ -728,8 +729,8 @@ var GameMovingElement = /** @class */ (function (_super) {
             ctx.strokeStyle = color;
             var points = [];
             var temp_points = this.movingStyle.points;
-            for (var _i = 0, temp_points_2 = temp_points; _i < temp_points_2.length; _i++) {
-                var i = temp_points_2[_i];
+            for (var _a = 0, temp_points_2 = temp_points; _a < temp_points_2.length; _a++) {
+                var i = temp_points_2[_a];
                 var temp_array = [0, 0];
                 temp_array[0] = ((i[0] / 100) * this.width) + this.x;
                 temp_array[1] = ((i[1] / 100) * this.height) + this.y;
@@ -739,8 +740,8 @@ var GameMovingElement = /** @class */ (function (_super) {
             ctx.beginPath();
             ctx.moveTo.apply(ctx, p[0]);
             ctx.lineTo.apply(ctx, p[0]);
-            for (var _a = 0, p_2 = p; _a < p_2.length; _a++) {
-                var i = p_2[_a];
+            for (var _b = 0, p_2 = p; _b < p_2.length; _b++) {
+                var i = p_2[_b];
                 ctx.lineTo.apply(ctx, i);
             }
             var closePath = this.movingStyle.closePath === undefined ? true : this.movingStyle.closePath;

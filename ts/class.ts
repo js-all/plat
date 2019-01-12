@@ -676,46 +676,47 @@ class GameEntity extends GameElement {
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
         }
-        if(touchGround) this.fy  = 0;
-        console.log(touchGround);
-        
-        let ffx: number | null = null;
-        let ffy: number | null = null;
+        if (touchGround) this.fy = 0;
+
         let fff = false;
-        let fc :"fy" | "fx" = Math.abs(this.fy) >= Math.abs(this.fx) ? "fy" : "fx";
-        for(let i = 0;i < Math.abs(this[fc]);i++) {
-            let cfc : "fy" | "fx" = fc === 'fy' ? 'fx' : 'fy';
-            let r = this[cfc] / this[fc];
-            let tt :detailTouchInterface | null = null;
-            let x = fc === 'fy' ? (this.fy < 0 ? -i : i) * r : this.fx < 0 ? -i : i;
-            let y = fc === 'fx' ? (this.fx < 0 ? -i : i) * r : this.fy < 0 ? -i : i;
-            for(let c of CollisionObjects) {
-                let t = GameElement.touch(this.width, this.height, this.x + x, this.y + y, c.width, c.height, c.x, c.y, true);
-                if (t.res && t.superposed) {
-                    //console.log(this.fy);
-                    fff = true;
-                    tt = t;
-                    break;
+        let winnerIndex = 0;
+        let _i = 0;
+        /*for (let c of CollisionObjects) {
+            const d = CollisionObjects[winnerIndex];
+            let Y, X = false;
+            if (this.fy > 0) {
+                if ((this.fy + this.height + this.y) - (c.y) > (this.fy + this.height + this.y) - (d.y) &&
+                    (c.y + c.height) - (this.y + this.height) < (d.y + d.height) - (this.y + this.height))
+                    Y = true;
+            } else if (this.fy <= 0) {
+                if ((c.height + c.y) - (this.fy + this.y) > (d.height + d.y) - (this.fy + this.y) &&
+                    (c.y) - (this.y + this.fy + this.height) > (d.y) - (this.y + this.fy + this.height))
+                    Y = true;
+            }
+            if (Y) {
+                if (this.fx > 0) {
+                    if (c.x + c.width >= this.x + this.width && c.x <= this.x + this.fx + this.width) X = true;
+                } else if (this.fx <= 0) {
+                    if (c.x <= this.x && c.x + c.width >= this.x + this.fx) X = true;
                 }
             }
-            if(fff && tt !== null) {
-                for (let c of collisions) {
-                    if (c.res && c.face === Face.left && c.superposed) {
-                        this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
-                    } else if (c.res && c.face === Face.right && c.superposed) {
-                        this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
-                    } else if (c.res && c.face === Face.top && c.superposed) {
-                        this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
-                    }
-                }
-                break;
-            }
-        } 
-        this.y += fff && ffy !== null ? ffy : this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
-        this.x += fff && ffx !== null ? ffx : this.fx;
+            if (X && Y) winnerIndex = _i;
+            _i++;
+        }*/
+        this.y += this.fj > 0 ? -this.fj : touchGround ? 0 : this.fy;
+        this.x += this.fx;
         collisions = [];
         for (let c of CollisionObjects) {
             collisions.push(this.touch(c, true));
+        }
+        for (let c of collisions) {
+            if (c.res && c.face === Face.left && c.superposed) {
+                this.x = CollisionObjects[collisions.indexOf(c)].x - this.width;
+            } else if (c.res && c.face === Face.right && c.superposed) {
+                this.x = CollisionObjects[collisions.indexOf(c)].x + CollisionObjects[collisions.indexOf(c)].width;
+            } else if (c.res && c.face === Face.top && c.superposed) {
+                this.y = CollisionObjects[collisions.indexOf(c)].y - this.height;
+            }
         }
         touchGround = false;
         for (let c of collisions) {
@@ -1004,7 +1005,7 @@ class _M00 extends GameEntity {
         const maxFX = 10;
     }
 }
-const MonstersElement :GameEntity[] = []
+const MonstersElement: GameEntity[] = []
 const Monster = {
     Monsters: [
         _M00

@@ -4,8 +4,9 @@ var cw = 1500;
 var ch = 1500;
 var ctx = canvas.getContext('2d');
 var draw_rate = 30;
-var move_rate = 30;
+var move_rate = 60;
 var activeKeys = [];
+var moveConst = 5;
 document.body.appendChild(canvas);
 canvas.width = cw;
 canvas.height = ch;
@@ -37,37 +38,29 @@ for (var _i = 0, CollisionObjects_1 = CollisionObjects; _i < CollisionObjects_1.
 }
 var player = new Player(250, 1050, true);
 var m0 = new _M00(250, 1050);
+var area = new Area([ground, wallLeft, wallRight, plat1, plat2, m0, player], new AreaCamera(player.x - (750 - player.width / 2), player.y - (750 - player.height / 2), 1500, 1500));
+player.move = function () {
+    Player.prototype.move.call(player);
+    area.camera.x = player.x - (area.camera.width / 2 - player.width / 2);
+    area.camera.y = player.y - (area.camera.height / 2 - player.height / 2);
+};
 player.setAction(Actions.walking);
 function draw() {
     ctx.clearRect(0, 0, cw, ch);
-    for (var _i = 0, CollisionObjects_2 = CollisionObjects; _i < CollisionObjects_2.length; _i++) {
-        var i = CollisionObjects_2[_i];
-        i.draw(ctx);
-    }
-    for (var _a = 0, MonstersElement_1 = MonstersElement; _a < MonstersElement_1.length; _a++) {
-        var i = MonstersElement_1[_a];
-        i.draw(ctx);
-    }
-    player.draw(ctx);
+    area.draw(ctx);
 }
 function move() {
-    player.anime();
-    player.move();
-    ground.move();
-    for (var _i = 0, MonstersElement_2 = MonstersElement; _i < MonstersElement_2.length; _i++) {
-        var i = MonstersElement_2[_i];
-        i.move();
-        i.anime();
-    }
+    area.membersAnime();
+    area.membersMove();
     player.fx = 0;
     var actionUsed = false;
     if (player.isJumping && player.action !== Actions.jumping)
         player.setAction(Actions.jumping);
-    for (var _a = 0, activeKeys_1 = activeKeys; _a < activeKeys_1.length; _a++) {
-        var key = activeKeys_1[_a];
+    for (var _i = 0, activeKeys_1 = activeKeys; _i < activeKeys_1.length; _i++) {
+        var key = activeKeys_1[_i];
         switch (key) {
             case 37:
-                player.fx = -10;
+                player.fx = -moveConst;
                 //player.orientation = Orientation.left;
                 if (player.action !== Actions.walking)
                     player.setAction(Actions.walking);
@@ -80,7 +73,7 @@ function move() {
                 actionUsed = true;
                 break;
             case 39:
-                player.fx = 10;
+                player.fx = moveConst;
                 //player.orientation = Orientation.right;
                 if (player.action !== Actions.walking)
                     player.setAction(Actions.walking);

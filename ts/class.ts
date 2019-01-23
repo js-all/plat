@@ -76,7 +76,7 @@ enum Face {
 /**
  * @class les elements du jeu
  */
-class GameElement {
+ class GameElement {
     /**
      * la largeur de l'element
     */
@@ -474,6 +474,14 @@ class GameEntity extends GameElement {
      */
     gravity: number = 0;
     /**
+     * la date du dernier saut
+     */
+    lastJump: Date | null = null;
+    /**
+     * le delai a mettre entre chaque  saut
+     */
+    jumpTimeOut: number;
+    /**
      * 
      * @param width - la largeur de l'entité
      * @param height - la hauteur de l'entité
@@ -486,16 +494,18 @@ class GameEntity extends GameElement {
      * @param orientation - l'orientation de l'entité
      * @param showHitBox - boolean indiquant si la hit box de l'entité doit être affiché
      * @param hitBoxColor - la couleure de la hitbox de l'entité
+     * @param jumpTimeOut - le delai minimum antre chasue saut
      * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
      * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
      */
-    constructor(width: number, height: number, x: number, y: number, life: number, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), onDamage: Function = function () { }, onDeath: Function = function () { }) {
+    constructor(width: number, height: number, x: number, y: number, life: number, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), jumpTimeOut: number = 50, onDamage: Function = function () { }, onDeath: Function = function () { }) {
         super(width, height, x, y, life, {
             type: 'image',
             IMGPath: ''
         }, fx, fy, false, showHitBox, hitBoxColor, onDamage, onDeath);
         this.orientation = orientation;
         this.isWalking = false;
+        this.jumpTimeOut = jumpTimeOut;
         let walkingSprites: GameEtityTrueActionSpritesSpriteInterface = {
             left: [],
             right: []
@@ -651,8 +661,9 @@ class GameEntity extends GameElement {
      * fait sauté l'entité
      * @param power la puissance du saut de l'entité
      */
-    jump(power: number = 50) {
+    jump(power: number = 40) {
         if (this.isJumping) return;
+        if(this.lastJump !== null && new Date().getTime() - this.lastJump.getTime() < this.jumpTimeOut) return;;
         this.fj = Math.abs(power);
         this.isJumping = true;
     }
@@ -666,8 +677,8 @@ class GameEntity extends GameElement {
      * fait bougé l'entité selon ses forces x et y en applicants les coliisions et la gravité
      */
     move() {
-        const nfy = 25;
-        const ngr = 1;
+        const nfy = 10;
+        const ngr = 0.5;
         let collisions: detailTouchInterface[] = [];
         for (let c of CollisionObjects) {
             collisions.push(this.touch(c, true));
@@ -725,10 +736,10 @@ class GameEntity extends GameElement {
         if (!touchGround) this.isJumping = true;
         if (this.fj > 0) {
             this.fj -= this.gravity;
-            this.gravity += 1;
+            this.gravity += .3;
             for (let c of collisions) {
                 if (c.res && c.face === Face.bottom && c.superposed) {
-                    this.fj = -1;
+                    this.fj = -.1;
                     this.y = CollisionObjects[collisions.indexOf(c)].y + CollisionObjects[collisions.indexOf(c)].height;
                 }
             }
@@ -740,7 +751,7 @@ class GameEntity extends GameElement {
         } else {
             if (!touchGround) {
                 this.fy += this.gravity;
-                this.gravity += 1;
+                this.gravity += .1;
             }
             else {
                 this.fy = nfy;
@@ -750,8 +761,9 @@ class GameEntity extends GameElement {
         for (let c of collisions) {
             if (c.res && c.face === Face.top) touchGround = true;
         }
-        if (touchGround) {
+        if (touchGround && this.isJumping) {
             this.isJumping = false;
+            this.lastJump = new Date();
         }
     }
 }
@@ -1012,60 +1024,47 @@ const Monster = {
     ],
     Monbi: _M00
 }
-/**
- * la class de joueure
- */
-class Player extends GameEntity {
-    /**
-     * crée un nouvean joueure
-     * @param x - l'absice du joueure
-     * @param y - l'ordoné du joueure
-     * @param showHitBox - boolean indiquan si la hitbox du joueure doit être afficher
-     * @param hitBoxColor - la couleure de la hitbox
-     */
-    constructor(x: number, y: number, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random()) {
-        super(68.75, 93.75, x, y, 10, {
-            walking: {
-                spritesPath: [
-                    "./images/sprites/player/walking/0.png",
-                    "./images/sprites/player/walking/1.png",
-                    "./images/sprites/player/walking/2.png",
-                    "./images/sprites/player/walking/3.png"
-                ],
-                animeTime: 1000
-            },
-            jumping: {
-                spritesPath: [
-                    "./images/sprites/player/jumping/0.png"
-                ],
-                animeTime: 1000
-            },
-            attacking: {
-                spritesPath: [
-                    "./images/sprites/player/attacking/0.png"
-                ],
-                animeTime: 1000
-            },
-            nothing: {
-                spritesPath: [
-                    "./images/sprites/player/nothing/0.png"
-                ],
-                animeTime: 1000
-            }
-        }, 0, 0, Orientation.right, showHitBox, hitBoxColor);
+class AreaCamera {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    constructor(x: number, y: number, width: number, height: number) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
-    /**
-     * dessine le joueure
-     * @param ctx - le context sur le quelle dessiner le joueure
-     */
+}
+class Area {
+    members: Array<any extends GameElement ? any : GameElement>;
+    camera: AreaCamera;
+    constructor(members: GameElement[], camera: AreaCamera) {
+        this.members = members;
+        this.camera = camera;
+    }
+
     draw(ctx: CanvasRenderingContext2D) {
-        if (this.showHitBox) {
-            ctx.save();
-            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.restore();
+        ctx.save();
+        ctx.scale((ctx.canvas.width / this.camera.width), (ctx.canvas.height / this.camera.height));
+        ctx.translate(-this.camera.x, -this.camera.y);
+        for(let member of this.members) {
+            member.draw(ctx);
         }
-        let y = 1;
-        ctx.drawImage(pathToImage(this.style.IMGPath || ''), 5, y, 22, 32 - (y), this.x, this.y, this.width, this.height)
+        ctx.restore();
+    }
+
+    membersMove() {
+        for(let member of this.members) {
+            member.move();
+        }
+    }
+
+    membersAnime() {
+        for(let member of this.members) {
+            if('anime' in member) {
+                member.anime();
+            } 
+        }
     }
 }

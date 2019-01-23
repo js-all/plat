@@ -294,15 +294,17 @@ var GameEntity = /** @class */ (function (_super) {
      * @param orientation - l'orientation de l'entité
      * @param showHitBox - boolean indiquant si la hit box de l'entité doit être affiché
      * @param hitBoxColor - la couleure de la hitbox de l'entité
+     * @param jumpTimeOut - le delai minimum antre chasue saut
      * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
      * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
      */
-    function GameEntity(width, height, x, y, life, sprites, fx, fy, orientation, showHitBox, hitBoxColor, onDamage, onDeath) {
+    function GameEntity(width, height, x, y, life, sprites, fx, fy, orientation, showHitBox, hitBoxColor, jumpTimeOut, onDamage, onDeath) {
         if (fx === void 0) { fx = 0; }
         if (fy === void 0) { fy = 0; }
         if (orientation === void 0) { orientation = Orientation.right; }
         if (showHitBox === void 0) { showHitBox = false; }
         if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
+        if (jumpTimeOut === void 0) { jumpTimeOut = 50; }
         if (onDamage === void 0) { onDamage = function () { }; }
         if (onDeath === void 0) { onDeath = function () { }; }
         var _this = _super.call(this, width, height, x, y, life, {
@@ -333,8 +335,13 @@ var GameEntity = /** @class */ (function (_super) {
          * la gravité de lentité
          */
         _this.gravity = 0;
+        /**
+         * la date du dernier saut
+         */
+        _this.lastJump = null;
         _this.orientation = orientation;
         _this.isWalking = false;
+        _this.jumpTimeOut = jumpTimeOut;
         var walkingSprites = {
             left: [],
             right: []
@@ -512,9 +519,12 @@ var GameEntity = /** @class */ (function (_super) {
      * @param power la puissance du saut de l'entité
      */
     GameEntity.prototype.jump = function (power) {
-        if (power === void 0) { power = 50; }
+        if (power === void 0) { power = 40; }
         if (this.isJumping)
             return;
+        if (this.lastJump !== null && new Date().getTime() - this.lastJump.getTime() < this.jumpTimeOut)
+            return;
+        ;
         this.fj = Math.abs(power);
         this.isJumping = true;
     };
@@ -528,8 +538,8 @@ var GameEntity = /** @class */ (function (_super) {
      * fait bougé l'entité selon ses forces x et y en applicants les coliisions et la gravité
      */
     GameEntity.prototype.move = function () {
-        var nfy = 25;
-        var ngr = 1;
+        var nfy = 10;
+        var ngr = 0.5;
         var collisions = [];
         for (var _a = 0, CollisionObjects_1 = CollisionObjects; _a < CollisionObjects_1.length; _a++) {
             var c = CollisionObjects_1[_a];
@@ -597,11 +607,11 @@ var GameEntity = /** @class */ (function (_super) {
             this.isJumping = true;
         if (this.fj > 0) {
             this.fj -= this.gravity;
-            this.gravity += 1;
+            this.gravity += .3;
             for (var _f = 0, collisions_4 = collisions; _f < collisions_4.length; _f++) {
                 var c = collisions_4[_f];
                 if (c.res && c.face === Face.bottom && c.superposed) {
-                    this.fj = -1;
+                    this.fj = -.1;
                     this.y = CollisionObjects[collisions.indexOf(c)].y + CollisionObjects[collisions.indexOf(c)].height;
                 }
             }
@@ -614,7 +624,7 @@ var GameEntity = /** @class */ (function (_super) {
         else {
             if (!touchGround) {
                 this.fy += this.gravity;
-                this.gravity += 1;
+                this.gravity += .1;
             }
             else {
                 this.fy = nfy;
@@ -626,8 +636,9 @@ var GameEntity = /** @class */ (function (_super) {
             if (c.res && c.face === Face.top)
                 touchGround = true;
         }
-        if (touchGround) {
+        if (touchGround && this.isJumping) {
             this.isJumping = false;
+            this.lastJump = new Date();
         }
     };
     /**
@@ -877,64 +888,43 @@ var Monster = {
     ],
     Monbi: _M00
 };
-/**
- * la class de joueure
- */
-var Player = /** @class */ (function (_super) {
-    __extends(Player, _super);
-    /**
-     * crée un nouvean joueure
-     * @param x - l'absice du joueure
-     * @param y - l'ordoné du joueure
-     * @param showHitBox - boolean indiquan si la hitbox du joueure doit être afficher
-     * @param hitBoxColor - la couleure de la hitbox
-     */
-    function Player(x, y, showHitBox, hitBoxColor) {
-        if (showHitBox === void 0) { showHitBox = false; }
-        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
-        return _super.call(this, 68.75, 93.75, x, y, 10, {
-            walking: {
-                spritesPath: [
-                    "./images/sprites/player/walking/0.png",
-                    "./images/sprites/player/walking/1.png",
-                    "./images/sprites/player/walking/2.png",
-                    "./images/sprites/player/walking/3.png"
-                ],
-                animeTime: 1000
-            },
-            jumping: {
-                spritesPath: [
-                    "./images/sprites/player/jumping/0.png"
-                ],
-                animeTime: 1000
-            },
-            attacking: {
-                spritesPath: [
-                    "./images/sprites/player/attacking/0.png"
-                ],
-                animeTime: 1000
-            },
-            nothing: {
-                spritesPath: [
-                    "./images/sprites/player/nothing/0.png"
-                ],
-                animeTime: 1000
-            }
-        }, 0, 0, Orientation.right, showHitBox, hitBoxColor) || this;
+var AreaCamera = /** @class */ (function () {
+    function AreaCamera(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
-    /**
-     * dessine le joueure
-     * @param ctx - le context sur le quelle dessiner le joueure
-     */
-    Player.prototype.draw = function (ctx) {
-        if (this.showHitBox) {
-            ctx.save();
-            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.restore();
+    return AreaCamera;
+}());
+var Area = /** @class */ (function () {
+    function Area(members, camera) {
+        this.members = members;
+        this.camera = camera;
+    }
+    Area.prototype.draw = function (ctx) {
+        ctx.save();
+        ctx.scale((ctx.canvas.width / this.camera.width), (ctx.canvas.height / this.camera.height));
+        ctx.translate(-this.camera.x, -this.camera.y);
+        for (var _a = 0, _b = this.members; _a < _b.length; _a++) {
+            var member = _b[_a];
+            member.draw(ctx);
         }
-        var y = 1;
-        ctx.drawImage(pathToImage(this.style.IMGPath || ''), 5, y, 22, 32 - (y), this.x, this.y, this.width, this.height);
+        ctx.restore();
     };
-    return Player;
-}(GameEntity));
+    Area.prototype.membersMove = function () {
+        for (var _a = 0, _b = this.members; _a < _b.length; _a++) {
+            var member = _b[_a];
+            member.move();
+        }
+    };
+    Area.prototype.membersAnime = function () {
+        for (var _a = 0, _b = this.members; _a < _b.length; _a++) {
+            var member = _b[_a];
+            if ('anime' in member) {
+                member.anime();
+            }
+        }
+    };
+    return Area;
+}());

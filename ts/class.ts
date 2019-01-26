@@ -76,7 +76,7 @@ enum Face {
 /**
  * @class les elements du jeu
  */
- class GameElement {
+class GameElement {
     /**
      * la largeur de l'element
     */
@@ -121,6 +121,10 @@ enum Face {
      * le style de l'element
      */
     style: GameElementStyleInterface<"image" | "path" | "rectangle">;
+    /**
+     * l'image du style de l'element si style vaut "image" 
+     */
+    styleImage: HTMLImageElement | null;
     /**
      * boolean indiquen si la hit box de l'objet doit être afficher
      */
@@ -170,6 +174,7 @@ enum Face {
                 if (i.length !== 2) throw new TypeError('GameElement, the points array is an array of array of numbers with a length of two');
             }
         }
+        this.styleImage = this.style.type === "image" ? pathToImage(<string>this.style.IMGPath) : null;
         this.fx = fx;
         this.fy = fy;
         this.callOnDamage = onDamage;
@@ -192,11 +197,10 @@ enum Face {
             ctx.fillRect(this.x, this.y, this.width, this.height)
         } else if (this.style.type === 'image') {
             let resizeIMG: boolean = this.style.resiveIMG === undefined ? true : this.style.resiveIMG;
-            let img = pathToImage(<string>this.style.IMGPath);
             if (resizeIMG) {
-                ctx.drawImage(img, this.x, this.y, this.width, this.height);
+                ctx.drawImage(<HTMLImageElement>this.styleImage, this.x, this.y, this.width, this.height);
             } else {
-                ctx.drawImage(img, this.x, this.y)
+                ctx.drawImage(<HTMLImageElement>this.styleImage, this.x, this.y)
             }
         } else if (this.style.type === 'path') {
             let color: string = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
@@ -254,6 +258,20 @@ enum Face {
      */
     touch<bol extends true | false>(gameElement: GameElement, detail: bol): bol extends false ? boolean : detailTouchInterface {
         return GameElement.touch(this.width, this.height, this.x, this.y, gameElement.width, gameElement.height, gameElement.x, gameElement.y, detail);
+    }
+    /**
+     * change l'image de l'element si son style.type vaut "image"
+     * @param image - l'image ou le chemin vers l'image
+     */
+    setImage(image: string | HTMLImageElement) {
+        if (this.style.type !== 'image') return;
+        if (typeof image === "string") {
+            this.style.IMGPath = image;
+            this.styleImage = pathToImage(image);
+        } else {
+            this.style.IMGPath = image.src;
+            this.styleImage = image;
+        }
     }
     /**
      * retourne un boolean ou une detailTouchInterface indiquant si dans la cas ou il y aurait des element avec les largeurs, heuteurs, ordonées et abscices fourni en parametre ils se toucherait
@@ -663,7 +681,7 @@ class GameEntity extends GameElement {
      */
     jump(power: number = 40) {
         if (this.isJumping) return;
-        if(this.lastJump !== null && new Date().getTime() - this.lastJump.getTime() < this.jumpTimeOut) return;;
+        if (this.lastJump !== null && new Date().getTime() - this.lastJump.getTime() < this.jumpTimeOut) return;;
         this.fj = Math.abs(power);
         this.isJumping = true;
     }
@@ -978,9 +996,26 @@ class GameMovingElement extends GameElement {
         this.anime();
     }
 }
-class _M00 extends GameEntity {
-    constructor(x: number, y: number) {
-        super(100, 100, x, y, 2, {
+const MonstersElement: GameEntity[] = []
+class Monster extends GameEntity {
+    static monsters: Array<{ new(): GameEntity }> = [];
+    /**
+     *
+     * @param x l'absice du monstre
+     * @param y l'ordoné du monstre
+     */
+    constructor(x: number, y: number, id: number) {
+        super(0, 0, x, y, 0, { walking: { spritesPath: [''], animeTime: 1000 }, jumping: { spritesPath: [''], animeTime: 1000 }, attacking: { spritesPath: [''], animeTime: 1000 }, nothing: { spritesPath: [''], animeTime: 1000 } });
+        if (id >= Monster.monsters.length) throw new Error('bad ID');
+        let _this = new Monster.monsters[id]();
+        MonstersElement.push(this);
+        this.x = x;
+        this.y = y;
+    }
+}
+Monster.monsters.push(class extends GameEntity {
+    constructor() {
+        super(100, 100, 0, 0, 2, {
             walking: {
                 spritesPath: [
                     './images/sprites/monsters/00/walking/0.png',
@@ -1006,24 +1041,16 @@ class _M00 extends GameEntity {
             nothing: {
                 spritesPath: [
                     './images/sprites/monsters/00/nothing/0.png',
-                    './images/sprites/monsters/00/nothing/1.png'
                 ],
                 animeTime: 1000
             }
         });
-        MonstersElement.push(this);
+
     }
     follow() {
         const maxFX = 10;
     }
-}
-const MonstersElement: GameEntity[] = []
-const Monster = {
-    Monsters: [
-        _M00
-    ],
-    Monbi: _M00
-}
+})
 class AreaCamera {
     x: number;
     y: number;
@@ -1048,23 +1075,107 @@ class Area {
         ctx.save();
         ctx.scale((ctx.canvas.width / this.camera.width), (ctx.canvas.height / this.camera.height));
         ctx.translate(-this.camera.x, -this.camera.y);
-        for(let member of this.members) {
+        for (let member of this.members) {
             member.draw(ctx);
         }
         ctx.restore();
     }
 
     membersMove() {
-        for(let member of this.members) {
+        for (let member of this.members) {
             member.move();
         }
     }
 
     membersAnime() {
-        for(let member of this.members) {
-            if('anime' in member) {
+        for (let member of this.members) {
+            if ('anime' in member) {
                 member.anime();
-            } 
+            }
         }
     }
+}
+interface TileInterface {
+    name: string,
+    image: string | HTMLImageElement
+}
+class Tile extends GameElement {
+    static defaultTileSize: number = 100;
+    static defaultTexture: HTMLImageElement = Tile._createDefaultTexture();
+    static tiles: TileInterface[];
+
+    constructor(x: number, y: number, size: number = Tile.defaultTileSize, id: number, collision: boolean = false) {
+        super(size, size, x, y, 1, { type: 'image', IMGPath: '' }, 0, 0, collision);
+        this.setImage(Tile.defaultTexture);
+        let image = new Image();
+        let _this = this;
+        image.src = typeof Tile.tiles[id].image === "string" ? <string>Tile.tiles[id].image : (<HTMLImageElement>Tile.tiles[id].image).src;
+        image.onload = () => {
+            _this.setImage(image);;
+        }
+
+    }
+    static addTile(name: string, image: HTMLImageElement | string) {
+        let tile: TileInterface = {
+            name: name,
+            image: image
+        };
+        Tile.tiles.push(tile);
+    }
+    static _createDefaultTexture(): HTMLImageElement {
+        let res = new Image();
+        res.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAY30lEQVR4Xu1dCawV1Rn+UXAFUYm7IZUqAkaNNgippSxu0BZlCcgioCCERSDsi0YRwiYCQdkXWaRsIkWWUjYVymIEgo' +
+            'WyhBIwjUgCQSFC2XnNN3PnvXnzZu6d+969+vD7JmlSuXPnzjnfd77z/f/5z3klcsxyTBdtD5Sgbbkajh4oIQHgJoIEgBx/CQA5AbibT996OQByCsgBcBNAAsCNv0kAuAkgAeDGXwLAjr9yANwMkAMgx18CQE4A7ubTt14hADkF' +
+            '5AC4CSAB4MZfOQB2/BUCcDNADoAcfwkAOQG4m0/feoUA5BSQA+AmgASAG3/lANjxVwjAzQA5AHL8JQDkBOBuPn3rFQKQU0AOgJsAEgBu/JUDYMdfIQA3A+QAyPGXAJATgLv59K1XCEBOATkAbgJIALjxVw6AHX+FANwMkAMgx1' +
+            '8CQE4A7ubTt14hADkF5AC4CSAB4MZfOQB2/BUCcDNADoAcfwkAOQG4m0/feoUA5BSQA+AmgASAG3/lANjxVwjAzQA5AHL8JQDkBOBuPn3rFQKQU0AOgJsAEgBu/JUDYMdfIQA3A+QAyPGXAJATgLv59K1XCEBOATkAbgJIALjx' +
+            'Vw6AHX+FANwMkAMgx18CQE4A7ubTt14hADkF5AC4CSAB4MZfOQB2/BUCcDNADoAcfwkAOQG4m0/feoUA5BSQA+AmgASAG3/lANjxVwjAzQA5AHL8JQDkBOBuPn3rFQKQU0AOgJsAEgBu/JUDYMdfIQA3A+QAyPGXAJATgLv59K' +
+            '1XCEBOATkAbgJIALjxVw6AHX+FANwMkAMgx18CQE4A7ubTt14hADkF5AC4CSAB4MZfOQB2/BUCcDNADoAcfwkAOQG4m0/feoUA5BSQA+AmgASAG3/lANjxVwjAzQA5AHL8JQDkBOBuPn3rFQKQU0AOgJsAEgBu/JUDYMdfIQA3' +
+            'A+QAyPGXAJATgLv59K1XCEBOATkAbgJIALjxVw6AHX+FANwMkAMgx18CQE4A7ubTt14hADkF5AC4CSAB4MZfOQB2/BUCcDNADoAcfwkAOQG4m0/feoUA5BSQA+AmgASAG3/lANjxVwjAzQA5AHL8JQDkBOBuPn3rFQKQU0AOgJ' +
+            'sAEgBu/JUDYMdfIQA3A+QAyPGXAJATgLv59K1XCEBOATkAbgJIALjxVw6AHX+FANwMkAMgx18CQE4A7ubTt14hADkF5AC4CSAB4MZfOQB2/BUCcDNADoAcfwkAOQG4m0/feoUA5BSQA+AmgASAG3/lANjxVwjAzQA5AHL8JQDk' +
+            'BOBuPn3rFQKQU0AOgJsAEgBu/JUDYMdfIQA3A+QAyPGXAJATgLv59K1XCEBOATkAbgJIALjxVw6AHX+FANwMkAMgx18CQE4A7ubTt14hADkF5AC4CSAB4MZfOQB2/BUCcDNADoAcfwkAOQG4m0/feoUA5BSQA+AmQNEEYPBgs3' +
+            '79zK67zu3F9evNnn325+/RMmXMBgwwa9bM7N57za6/3n2HS5fMTp0yGzPGbNiwn/+9ivKL06ebtWuX94QZM8xefz35E++/323vTz/F/uU4AlCmTBkrW7asfffdd7GfW9xv/DW2qTB9fvULAAb/4sVmzz1nViKEzmfOmPXvbzZ+' +
+            'fGH655f7TjoCUL262ZAhZg8+6IrG55/Hfu9kAoBBMnToUHv55ZdtypQp9vbbb8d+bnG+sV+/ftazZ09bvny5vZ5KVItzQzLwble/AIwebda1q1mpUuHdcfSoWZs2ZmvXZqC7fsZHxBEAiN/QoWatW5uVLWt25Ij7/zMgAO3atb' +
+            'MBAwZYhQoV7OLFizZy5MirXgBeeOEFGzZsmD3xxBNWokQJmzFjhgSgSEnA4hAC7Nhh9uST7sjMyTH717/M8F5/+5sZBghmx6++SssW/4zDPPqn4ghAnTpmc+aY3Xef+5wMCsC6devsmWeecR574cKFX4UATJ8+3SBs3iUBMLu6' +
+            'HUDVqmaLFpn95jcupj/+aPbGG2bz5hWLMVykl5AAFKn7wr4sASjYK1e3AGRgBsw4yzL1QAlApnoy9zkSAAlAxkmVtQdKADLetRIACUDGSZW1B0oAMt61EoC4AoDkWefOZs2bm/32t2Y33+wusZ0/b3bwoNnMmWbIvhcmCeh/do' +
+            'UKZqVLu89GAu/0abNDh8zmzzebODE8cRe0/cloEpUUQ+6gUyezGjXM7rnH7Kab8pYQ8R7/+58Z1rxR1zBhgtnevdG/sm6dWSJZZhcumI0caZZquSzYb2Fr/MkEIPhZ1NvFqB3wLwO2atXKJkyYYFj+S3bt3bvXHnnkkdBb8N3O' +
+            'nTtb8+bNnRWE0qVLOxn3nJwcO336tB06dMjmz59vEydOtJ8i6hUWLlxoTZo0cb7npnZ+tN69e9tHH30U+VodO3a04cOH26233urcg5WLDz/80FauXGlz5syx+7xEacQTjhw5Yq1bt7bPEysohUmCDh482LDEeF2iLiYsyegXIe' +
+            '83H3jgAevevbtVrlzZSpYsaZcuXbITJ07Yxo0bneXKYP1FJvrY64aCOYCXXjIbNcpdUw5bV8c3MUg2bnSz6z16xC8EwqDD4Lj77uTqjudDCIYPNwOJ/VdRBKBKFbOxY81q1cp751TzDAprUEPw1lvhd0oAcvulU6dOzlLh3Snw' +
+            'hRhACDBgMUiCV5UqVWzRokX5RGb79u1Wp06dUNHA/RCVxx57LPdRGMgNGjSwqlWrFmsBgOD27ds3V7j8fbF+/Xp7NlBYl6k+DheAtm3dQXfnnamGhSsChw+bofosTiUgClV69TK78cbUz/buwAwBp/Huu3nfKawAYPDDWfhIEv' +
+            'tFzp513c6IEQW/IgFw+mTIkCHWq1cvuzENfOEARo8ebe/68U30cHBGv3z5sk2ePNnewCpP4Jo7d67jOK655hrnE8yYHTp0sFWrVjmiUVwdwA8//GBo1x133FGgTefOnTM4Coikd2W6j/HcPAeAAbJ0qdlDD+W9DGY//BvWmmGN' +
+            'YJ27dDFr0MAtPAleUaXA3bq5pbgIJXBBPPbvN1uwwGzVKrNt28zw+40bu2FHpUp57uPkSbfMd/Lkgr+XzirAsmVmf/lL3nMhLmvWuFWEK1e64Qas75//bPbii2Z/+lP+Nu7caVazZsGw5JcQAK8n0ml/hNpFVQKmY4G7devmFN' +
+            'jcnMAXM/z+/fttwYIFziDctm2bYZZu3LixM1ArVaqUa+9PnjzpFBxhcAev2bNnW8uWLe3aa691PsKA6dKli/Nc7wr+NgbOmDFj7M033yzwvHRyAOm03/uhdEMA73sQgQ0bNjgievDgQadW4bnnnrMePXo4fYcrW32cJwCzZpm1' +
+            'amWWUFEnBobafvZZQerAQiNGr1w5/2dhAhAUlnPnXFsfouS5D4PlRsHGDTe4/7R9uxnIHowZ4w6Ahg3Npk0zK1fOfV4yUfFeAt8BKT03dOyYW4u/fHn+NpMLAAb20qVL7aHExIEBCFsfNlN7HTd+/HiH5Dck8I2y9xUrVnRCgc' +
+            'cffzy3zzdv3mz16tVzQoHq1avbvHnzDDG0O6/k2Nq1aw0Vf2FXcRQAvPOKFSvsRUw6EVc2+9gVgGBBDWZ+zLqTJkW+lAUHCO4MEwDY5p493VLdK1dcG/7KK9HP9T5ZuNCsSRN3xoZowIL77JBzW1wBgKAg/wBxg/vADNKiRep3' +
+            'gOupXdu9D+ID9/PxxxIAXw+MGDHCSVSVKlXKrly54sTir8TA15/oC7O73k+0bdvW3n//fbvtttucf/KSewg3Vq9e7cyUXrLw8OHD1qJFC/sKuamQqzgKABKcEEsIWdSVzT52BaBvX7NBg/Li83/+0+yPf0w9QPDS2IHnJQvDBM' +
+            'BfqptOqSoGKAZuAniDhUeC0n/FFYDULQm/wz+7SwBC9wLs2LHDnkyUYgcz6cm6HQMVTsAb2MuWLbOXgvgmHoD7kBPwQoHvv//ecR0QB89FnDlzxgYOHGgffPBB5M8WRwFAqPTUU09FroigMdnsY1cApkwxa9/eHcjYQjtunFnv' +
+            '3qmHDWw8Zngvtg8KAHbozZ7tLrXh2rLF7OmnUz8Xd1Ss6MbmWI3AhaW44NJTpgUATugPfzD7/e/dfAeWjkqWlAOI2AuA2Rdx+j0JfLds2WJPx8QX9h5LdA8m8E21tIhcgvds2GbEzVgywxXXeRRHAQjL9PsHSLb72BUA/0yXzv' +
+            'bZ4AAMCgByClhHT7GuHEsRwtxDYQUAeQkkG7FRqHx5s7vuckXMG+xhLyQHUMABxK0biINvKveAuB8D+F6c9xC4du3a5SQXISLJruIoAKk2JGW7j10B8Nv0KKKH9Wxwlg4KQLDgJQ4Tou7JhAAgOYQlp9/9LvlglwBYnCx4MOtd' +
+            'NHjzF+KEPQtnEyDf4Nl+3JNsFSH4jKtRALLdx64A7NnjLsPhSkcAcL//u8VZADp2dPfO3357NE+RIIQD+u9/3UInhByoFkzWL8SrANkmZxCo9u3b23vvvZevaMa/5p9KgCQABUUWy8A5/iQDllew1vpxMNsd0bt79uxx1nhxBe' +
+            'OZIEHWrFkTuUSTCrywz4NFHlE2EvZx6tSpdj+KlhIXYsijR48669UHDhxw1lu//vrrfDbSPwtG9UucmTL47oVZLw6zinHbn6xvc6I+jCNsQYeHuoqIJbjC4JvvO8kKubBag9qUVEehxdlf4f1onPYXBDb/EXnplniHdVKW+9gR' +
+            'AD+JkU3t37+/k6FNddWoUcNZvvAGVlAAsLyBJQyvQCSdJFGq38bncQcA3rFZs2a5y0UotkBt+WdhNQ6+H44jAFiKev75551vxT04I85MFOeeuO3PmgAEk8DpJHnjAOy/B8nkli3NEkVB+b6OPRioGB04MPlT0xGA1avNErjG3u' +
+            'MR5/lx7vG3Ist97AgAznuDvcJ6KjKqkyZNSlrI4b0flnKwqQMHRoY5gPr16zuJmzsTxTSpEj3pciLOAAhmm+Osu3rvgeTSo48+6vxnlAPwD9S4AoBKNpyz512pNo3gvmLpAOrXNwOhvWKpdJZ50wEbNRyoAfGqT1EX8o9/mNWt' +
+            'm1cshkIthHk4CSrqSmfw+e+Nu8kL9SU+XJ2Ct+CZg+m8A9qR5T52BCA4U+/cudNq1qyZdG0S7wahQM21V4MddADYtbR169bcTR0o4kCZJhxGJq44AhC8J866K94tuE599uxZGzRokBOD+i+/AMQRT/QJyj5xLl1RBSDowAojsJ' +
+            'EhQJwZEKs7W7fmLc9evOiewJwhfJ3+CVaSIk+zYoXrBpYscXdienUoURWjXkf7l7tdVY0+adk/UFHAhqK4ZNWr6IsNG8x8uGZEALLcx44AYJZEIcbDDz/sdFWyemqvL4NlmGEOIEwk4iZtsOsJGyE8dxEmSoURgG+//daaNm2a' +
+            'W2MdJkQYpEuWLHHOxPOqzKJmd4RKeNcoEQw+P1jTHTW7xwkB8F1/DiajAhB3BsTA6NAhfwk5/ht7PJJdwVk9aq9FcA/Hf/7jxvtY8qtXz2zqVHdDGq7Ll926E/9x6v53iLMN27vfXz3qkjv5kffB/S5RApOuA3AHUdb62BEA/A' +
+            'Z2ZXXt2tUp6cSF5ZV33nkntLIKSb+ZM2c6Wy29ARIlAGG7sXbv3u04h6iSTVSEYWB5uYWowRdHAMJcCPaJo5Q07MJvImGIuN6rPMN9Ue8QdE+nTp1yNrfAHQWvYLu8zwsbAgQFAEnNNm3aOPXwca9IBxAUAGwRD9sSHbY7c/du' +
+            'l7ARJblORScGmDdwoyw2qlPxdye8PSFYoUGc76/2wyYzYOntSMW5kChiCzs7ICgAEItXXw3vqmDsnaw8PtiePGCLHgLgWVns41wBiJr1Nm3a5MSfSKRh4L/22mvOwQleXO/vvaiqprD1WwwUlHNiqyb2buP3GzVq5BwEgZnXv9' +
+            'br3wDi/704AoD7Z82aZSio8GZpDOYvvvjCpk2bZp9++qnzSOxUw//q1q2bW57q/y18Z9SoUfZWYBAE3RO+g3wBHAT2emN1AasQ2PwCUUE7ceADqtk8sS2KAPjzFFjZ+OSTT6xPnz6OOKNSDv+d7IoUgKBd/ve/3ePXEWuDkP4k' +
+            'MZZXsd/DG6j4weBOUljZRo3c/R2w7f57N292Z3N/Fj84u0ftI8FzsWMV7+Rdu3a5hV7BwiCcRQEB8f5wDDa89eljtmmTG2tjlj9wwH0KalzgPhKu2Pk3vB/CDhS3YZce3hFuA8lCvAeqaBGieEfUZyIH4LUpG32M7cCeA8DvhB' +
+            '2skIw8WD6DRb8LlXQhy4D+72KwQTi801LizlD79u1zTpj58ssvC3wlrgAEd1PF+W3E/BAexNnXJwiDstdXQ2aMMIGL+g0MUqw+VKtWLfeUmqIIAJ4VtZMszrJrpAAE94f4G4SBg70a2DPiXdhtib9J4M3EcToZ9+zb554+5ccX' +
+            'gykY30cNajwDAxGOxasSRCjw17+6fw/Cf0F8sMMzrBYEgoX38G/KCRt00cC6O2erVcs7pj2TAoDfzWQfJ9qRTwA8ERg3bpzVqlUrt9Y62GbMXii7xBIf/ucdt5SqrhlVXDgyKcw9BH8DsyQGPY5KiirxjCsALkfqGdrlbVuNwh' +
+            'FtQ74BG0tuueUWZ5/67QnCJFvGHDt2rDPLJztOC7kVHF6xePFix1V5/VYUAWjYsKGzEhN2Cg9CLf8pOWFtjhQADMK//93duxE8GSpssODhcAGw7HEOlMFsiUHfvXvBmTpo6+Ns3w7+gZgoy45j5OFEgsuJOO4Ov4swwX/hBCnM' +
+            '8snK2bEqMXeue7YEBr13/FimBSCTfRwlAF7bQSzMvLCSGAiI9TEokWiCvUV+IHjcUioBwLMxQGBRMWv5z4zDZ+fPn7fjx48bBhpi6LBZ349NOgLg/Tbic4Qa5cuXzz29Bu1CzuObb75x9p/DrXj3+zP2x44dc/6SDP6kVNiFxC' +
+            'gEq3bt2lauXDlHQCEoWHrEnnesgKBuIPjeRREAvAf2v2OFAoP9Jpxv6PxZxEtOkRMO1ECYECl4kZ+YG6Nj+Q2Ho2BXpnd244kT7p8iC9t5h4ECW4397f4zH12AzY4fdzeFIUcS4uoKbDOPms2D743fReLRvxkJVapNm+YXGNyH' +
+            'cnDsYoVQQQi88yjhDuB8ghf2jECosDUcZ0pgzwi+g3wDVh6w8oFVk2Csng0BcIlZtD72ta+AA0jGB3326+uBSAfw62uqWhTSAxIAclpIALgJIAHgxt9dA9ZF2wMSAFro3YZLALgJIAHgxl8CQI6/BICcAHIA3ASQAHDjLwdAjr' +
+            '8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwE' +
+            'kABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr' +
+            '8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwE' +
+            'kABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr' +
+            '8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwE' +
+            'kABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr' +
+            '8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwEkABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwE' +
+            'kABw4y8HQI6/BICcAHIA3ASQAHDjLwdAjr8EgJwAcgDcBJAAcOMvB0COvwSAnAByANwE+D8fqGtTAqyWBwAAAABJRU5ErkJggg==';
+        return res;
+    }
+
 }

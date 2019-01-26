@@ -1,22 +1,8 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * la class de joueure
  */
-var Player = /** @class */ (function (_super) {
-    __extends(Player, _super);
+class Player extends GameEntity {
     /**
      * crée un nouvean joueure
      * @param x - l'absice du joueure
@@ -24,10 +10,8 @@ var Player = /** @class */ (function (_super) {
      * @param showHitBox - boolean indiquan si la hitbox du joueure doit être afficher
      * @param hitBoxColor - la couleure de la hitbox
      */
-    function Player(x, y, showHitBox, hitBoxColor) {
-        if (showHitBox === void 0) { showHitBox = false; }
-        if (hitBoxColor === void 0) { hitBoxColor = rgb.random(); }
-        return _super.call(this, 68.75, 93.75, x, y, 10, {
+    constructor(x, y, showHitBox = false, hitBoxColor = rgb.random()) {
+        super(68.75, 93.75, x, y, 10, {
             walking: {
                 spritesPath: [
                     "./images/sprites/player/walking/0.png",
@@ -55,21 +39,20 @@ var Player = /** @class */ (function (_super) {
                 ],
                 animeTime: 1000
             }
-        }, 0, 0, Orientation.right, showHitBox, hitBoxColor) || this;
+        }, 0, 0, Orientation.right, showHitBox, hitBoxColor);
     }
     /**
      * dessine le joueure
      * @param ctx - le context sur le quelle dessiner le joueure
      */
-    Player.prototype.draw = function (ctx) {
+    draw(ctx) {
         if (this.showHitBox) {
             ctx.save();
             ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.restore();
         }
-        var y = 1;
+        let y = 1;
         ctx.drawImage(pathToImage(this.style.IMGPath || ''), 5, y, 22, 32 - (y), this.x, this.y, this.width, this.height);
-    };
-    return Player;
-}(GameEntity));
+    }
+}

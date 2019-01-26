@@ -13,7 +13,7 @@ interface GameElementStyleInterface<T extends "rectangle" | "image" | "path"> {
     /**
      * si type est a "path" ou "rectangle" la couleure 
      */
-    color?: T extends "path" | "rectangle" ? string | rgb : undefined,
+    color?: T extends "path" | "rectangle" ? string : undefined,
     /**
      * si type est a "path" dis si la figure vas être rempli
      */
@@ -132,7 +132,7 @@ class GameElement {
     /**
      * la couleure de la hitbox
      */
-    hitBoxColor: rgb | string;
+    hitBoxColor: string;
     /**
      * dit si l'objet aura des collsions
      */
@@ -153,7 +153,7 @@ class GameElement {
      * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
      * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
      */
-    constructor(width: number, height: number, x: number, y: number, life: number, style: GameElementStyleInterface<"image" | "path" | "rectangle">, fx: number = 0, fy: number = 0, collision: boolean = false, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), onDamage: Function = function () { }, onDeath: Function = function () { }) {
+    constructor(width: number, height: number, x: number, y: number, life: number, style: GameElementStyleInterface<"image" | "path" | "rectangle">, fx: number = 0, fy: number = 0, collision: boolean = false, showHitBox: boolean = false, hitBoxColor: string = "red", onDamage: Function = function () { }, onDeath: Function = function () { }) {
 
         this.width = width;
         this.height = height;
@@ -187,12 +187,12 @@ class GameElement {
     draw(ctx: CanvasRenderingContext2D): void {
         if (this.showHitBox) {
             ctx.save();
-            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillStyle = this.hitBoxColor;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.restore();
         }
         if (this.style.type === 'rectangle') {
-            let color: string = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
+            let color: string = this.style.color === undefined ? "red" : this.style.color;
             ctx.fillStyle = color;
             ctx.fillRect(this.x, this.y, this.width, this.height)
         } else if (this.style.type === 'image') {
@@ -203,7 +203,7 @@ class GameElement {
                 ctx.drawImage(<HTMLImageElement>this.styleImage, this.x, this.y)
             }
         } else if (this.style.type === 'path') {
-            let color: string = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
+            let color: string = this.style.color === undefined ? "red" : this.style.color;
             ctx.fillStyle = color;
             ctx.strokeStyle = color;
             let points: Array<[number, number]> = [];
@@ -516,7 +516,7 @@ class GameEntity extends GameElement {
      * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
      * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
      */
-    constructor(width: number, height: number, x: number, y: number, life: number, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random(), jumpTimeOut: number = 50, onDamage: Function = function () { }, onDeath: Function = function () { }) {
+    constructor(width: number, height: number, x: number, y: number, life: number, sprites: GameEntitySpriteInterface, fx: number = 0, fy: number = 0, orientation: Orientation = Orientation.right, showHitBox: boolean = false, hitBoxColor: string = "red", jumpTimeOut: number = 50, onDamage: Function = function () { }, onDeath: Function = function () { }) {
         super(width, height, x, y, life, {
             type: 'image',
             IMGPath: ''
@@ -609,6 +609,7 @@ class GameEntity extends GameElement {
     set sprite(value: HTMLImageElement) {
         this._sprite = value;
         this.style.IMGPath = value.src;
+        this.styleImage = value;
     }
     get sprite(): HTMLImageElement {
         return this._sprite;
@@ -800,7 +801,7 @@ interface GameMovingElemementStyleInterface<T extends "rectangle" | "sprites" | 
     /**
      * si type est a "path" ou "rectangle" la couleure 
      */
-    color?: T extends "path" | "rectangle" ? string | rgb : undefined,
+    color?: T extends "path" | "rectangle" ? string : undefined,
     /**
      * si type est a "path" dis si la figure vas être rempli
      */
@@ -882,7 +883,7 @@ class GameMovingElement extends GameElement {
      * @param showHitBox - bolean indiquant si la hitbox de l'entité doit êter afficher
      * @param hitBoxColor - la couelure de la hitbox
      */
-    constructor(width: number, height: number, x: number, y: number, style: GameMovingElemementStyleInterface<"path" | "rectangle" | "sprites">, fx: number = 0, fy: number = 0, life: number = 1, showHitBox: boolean = false, hitBoxColor: rgb = rgb.random()) {
+    constructor(width: number, height: number, x: number, y: number, style: GameMovingElemementStyleInterface<"path" | "rectangle" | "sprites">, fx: number = 0, fy: number = 0, life: number = 1, showHitBox: boolean = false, hitBoxColor: string = "red") {
         super(width, height, x, y, life, { type: 'rectangle', color: 'black' }, fx, fy, false, showHitBox, hitBoxColor);
         this.movingStyle = style;
         if (this.movingStyle.type === 'sprites') {
@@ -906,16 +907,16 @@ class GameMovingElement extends GameElement {
     draw(ctx: CanvasRenderingContext2D) {
         if (this.showHitBox) {
             ctx.save();
-            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillStyle = this.hitBoxColor;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.restore();
         }
         if (this.movingStyle.type === 'rectangle') {
-            let color: string = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            let color: string = this.movingStyle.color || "red";
             ctx.fillStyle = color;
             ctx.fillRect(this.x, this.y, this.width, this.height)
         } else if (this.movingStyle.type === 'path') {
-            let color: string = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            let color: string = this.movingStyle.color || "red"
             ctx.fillStyle = color;
             ctx.strokeStyle = color;
             let points: Array<[number, number]> = [];

@@ -41,7 +41,7 @@ class GameElement {
      * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
      * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
      */
-    constructor(width, height, x, y, life, style, fx = 0, fy = 0, collision = false, showHitBox = false, hitBoxColor = rgb.random(), onDamage = function () { }, onDeath = function () { }) {
+    constructor(width, height, x, y, life, style, fx = 0, fy = 0, collision = false, showHitBox = false, hitBoxColor = "red", onDamage = function () { }, onDeath = function () { }) {
         /**
          * dit si l'objet aura des collsions
          */
@@ -83,12 +83,12 @@ class GameElement {
     draw(ctx) {
         if (this.showHitBox) {
             ctx.save();
-            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillStyle = this.hitBoxColor;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.restore();
         }
         if (this.style.type === 'rectangle') {
-            let color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
+            let color = this.style.color === undefined ? "red" : this.style.color;
             ctx.fillStyle = color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
@@ -102,7 +102,7 @@ class GameElement {
             }
         }
         else if (this.style.type === 'path') {
-            let color = typeof this.style.color === 'string' ? this.style.color : this.style.color instanceof rgb ? this.style.color.value : 'black';
+            let color = this.style.color === undefined ? "red" : this.style.color;
             ctx.fillStyle = color;
             ctx.strokeStyle = color;
             let points = [];
@@ -289,7 +289,7 @@ class GameEntity extends GameElement {
      * @param onDamage - une fonctino appeler lorsque l'objet prendra des dommage (via la fonction damage)
      * @param onDeath - une fonction appeler quand l'objet mourra, quand sa vie serat a 0 (via la fonctino damage)
      */
-    constructor(width, height, x, y, life, sprites, fx = 0, fy = 0, orientation = Orientation.right, showHitBox = false, hitBoxColor = rgb.random(), jumpTimeOut = 50, onDamage = function () { }, onDeath = function () { }) {
+    constructor(width, height, x, y, life, sprites, fx = 0, fy = 0, orientation = Orientation.right, showHitBox = false, hitBoxColor = "red", jumpTimeOut = 50, onDamage = function () { }, onDeath = function () { }) {
         super(width, height, x, y, life, {
             type: 'image',
             IMGPath: ''
@@ -410,6 +410,7 @@ class GameEntity extends GameElement {
     set sprite(value) {
         this._sprite = value;
         this.style.IMGPath = value.src;
+        this.styleImage = value;
     }
     get sprite() {
         return this._sprite;
@@ -628,7 +629,7 @@ class GameMovingElement extends GameElement {
      * @param showHitBox - bolean indiquant si la hitbox de l'entité doit êter afficher
      * @param hitBoxColor - la couelure de la hitbox
      */
-    constructor(width, height, x, y, style, fx = 0, fy = 0, life = 1, showHitBox = false, hitBoxColor = rgb.random()) {
+    constructor(width, height, x, y, style, fx = 0, fy = 0, life = 1, showHitBox = false, hitBoxColor = "red") {
         super(width, height, x, y, life, { type: 'rectangle', color: 'black' }, fx, fy, false, showHitBox, hitBoxColor);
         /**
          * les sprites de l'entité
@@ -681,17 +682,17 @@ class GameMovingElement extends GameElement {
     draw(ctx) {
         if (this.showHitBox) {
             ctx.save();
-            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillStyle = this.hitBoxColor;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.restore();
         }
         if (this.movingStyle.type === 'rectangle') {
-            let color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            let color = this.movingStyle.color || "red";
             ctx.fillStyle = color;
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
         else if (this.movingStyle.type === 'path') {
-            let color = typeof this.movingStyle.color === 'string' ? this.movingStyle.color : this.movingStyle.color instanceof rgb ? this.movingStyle.color.value : 'black';
+            let color = this.movingStyle.color || "red";
             ctx.fillStyle = color;
             ctx.strokeStyle = color;
             let points = [];

@@ -17,7 +17,7 @@ ctx.imageSmoothingEnabled = false;
 
 const ground = new GameElement(1000 - 0, 100, 0, 900, 0, {
     type: "rectangle",
-    color: rgb.green
+    color: "green"
 }, 0, 0, true);
 const wallRight = new GameElement(100, 1000 - 100, 1000 - 100, 0, 0, {
     type: "rectangle",

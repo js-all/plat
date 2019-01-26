@@ -10,7 +10,7 @@ class Player extends GameEntity {
      * @param showHitBox - boolean indiquan si la hitbox du joueure doit être afficher
      * @param hitBoxColor - la couleure de la hitbox
      */
-    constructor(x, y, showHitBox = false, hitBoxColor = rgb.random()) {
+    constructor(x, y, showHitBox = false, hitBoxColor = "red") {
         super(68.75, 93.75, x, y, 10, {
             walking: {
                 spritesPath: [
@@ -48,7 +48,7 @@ class Player extends GameEntity {
     draw(ctx) {
         if (this.showHitBox) {
             ctx.save();
-            ctx.fillStyle = typeof this.hitBoxColor === 'string' ? this.hitBoxColor : this.hitBoxColor.value;
+            ctx.fillStyle = this.hitBoxColor;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.restore();
         }

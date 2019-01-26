@@ -793,60 +793,30 @@ class GameMovingElement extends GameElement {
  */
 GameMovingElement.maxAnimeTime = 10000;
 const MonstersElement = [];
-class Monster extends GameEntity {
+const Monster = {
     /**
-     *
-     * @param x l'absice du monstre
-     * @param y l'ordoné du monstre
+     * les class de monstre
      */
-    constructor(x, y, id) {
-        super(0, 0, x, y, 0, { walking: { spritesPath: [''], animeTime: 1000 }, jumping: { spritesPath: [''], animeTime: 1000 }, attacking: { spritesPath: [''], animeTime: 1000 }, nothing: { spritesPath: [''], animeTime: 1000 } });
+    monsters: [],
+    /**
+     * crée une nouvelle instance de la clas de monstre presciser par l'id
+     * @param x l'absice du monstre
+     * @param y l'ordonée du monstre
+     * @param id l'id de la class du monstre
+     */
+    createMonsterEntity(x, y, id) {
         if (id >= Monster.monsters.length)
             throw new Error('bad ID');
         let _this = new Monster.monsters[id]();
-        MonstersElement.push(this);
-        this.x = x;
-        this.y = y;
+        MonstersElement.push(_this);
+        _this.x = x;
+        _this.y = y;
+        return _this;
+    },
+    addMonster(monsterClass) {
+        this.monsters.push(monsterClass);
     }
-}
-Monster.monsters = [];
-Monster.monsters.push(class extends GameEntity {
-    constructor() {
-        super(100, 100, 0, 0, 2, {
-            walking: {
-                spritesPath: [
-                    './images/sprites/monsters/00/walking/0.png',
-                    './images/sprites/monsters/00/walking/1.png',
-                    './images/sprites/monsters/00/walking/2.png'
-                ],
-                animeTime: 500
-            },
-            jumping: {
-                spritesPath: [
-                    './images/sprites/monsters/00/jumping/0.png',
-                    './images/sprites/monsters/00/jumping/1.png'
-                ],
-                animeTime: 500
-            },
-            attacking: {
-                spritesPath: [
-                    './images/sprites/monsters/00/attacking/0.png',
-                    './images/sprites/monsters/00/attacking/1.png'
-                ],
-                animeTime: 1000
-            },
-            nothing: {
-                spritesPath: [
-                    './images/sprites/monsters/00/nothing/0.png',
-                ],
-                animeTime: 1000
-            }
-        });
-    }
-    follow() {
-        const maxFX = 10;
-    }
-});
+};
 class AreaCamera {
     constructor(x, y, width, height) {
         this.x = x;

@@ -55,3 +55,42 @@ class Player extends GameEntity {
         ctx.drawImage(pathToImage(this.style.IMGPath || ''), 5, y, 22, 32 - (y), this.x, this.y, this.width, this.height)
     }
 }
+
+Monster.addMonster(class extends GameEntity {
+    constructor() {
+        super(100, 100, 0, 0, 2, {
+            walking: {
+                spritesPath: [
+                    './images/sprites/monsters/00/walking/0.png',
+                    './images/sprites/monsters/00/walking/1.png',
+                    './images/sprites/monsters/00/walking/2.png'
+                ],
+                animeTime: 500
+            },
+            jumping: {
+                spritesPath: [
+                    './images/sprites/monsters/00/jumping/0.png',
+                    './images/sprites/monsters/00/jumping/1.png'
+                ],
+                animeTime: 500
+            },
+            attacking: {
+                spritesPath: [
+                    './images/sprites/monsters/00/attacking/0.png',
+                    './images/sprites/monsters/00/attacking/1.png'
+                ],
+                animeTime: 1000
+            },
+            nothing: {
+                spritesPath: [
+                    './images/sprites/monsters/00/nothing/0.png',
+                ],
+                animeTime: 1000
+            }
+        });
+
+    }
+    follow() {
+        const maxFX = 10;
+    }
+})

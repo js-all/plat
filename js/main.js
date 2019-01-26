@@ -35,8 +35,8 @@ for (let i of CollisionObjects) {
     i.y += 250;
     i.x += 250;
 }
-const player = new Player(250, 1050, true);
-const m0 = new Monster(250, 1050, 0);
+const player = new Player(250, 1050, false);
+const m0 = Monster.createMonsterEntity(250, 1050, 0);
 const area = new Area([ground, wallLeft, wallRight, plat1, plat2, m0, player], new AreaCamera(player.x - (750 - player.width / 2), player.y - (750 - player.height / 2), 1500, 1500));
 player.move = function () {
     Player.prototype.move.call(player);

@@ -493,7 +493,7 @@ class GameEntity extends GameElement {
      * fait sauté l'entité
      * @param power la puissance du saut de l'entité
      */
-    jump(power = 40) {
+    jump(power = 30) {
         if (this.isJumping)
             return;
         if (this.lastJump !== null && new Date().getTime() - this.lastJump.getTime() < this.jumpTimeOut)
@@ -576,7 +576,7 @@ class GameEntity extends GameElement {
             this.isJumping = true;
         if (this.fj > 0) {
             this.fj -= this.gravity;
-            this.gravity += .3;
+            this.gravity += .1;
             for (let c of collisions) {
                 if (c.res && c.face === Face.bottom && c.superposed) {
                     this.fj = -.1;
@@ -591,8 +591,9 @@ class GameEntity extends GameElement {
         }
         else {
             if (!touchGround) {
+                console.log(this.gravity);
                 this.fy += this.gravity;
-                this.gravity += .1;
+                this.gravity = this.gravity < 2 ? this.gravity + .1 : this.gravity;
             }
             else {
                 this.fy = nfy;
@@ -827,6 +828,17 @@ class AreaCamera {
     }
 }
 class Area {
+    static createAreaFromJson(json) {
+        const baseID = Tile.tiles.length;
+        for (let tile of json.json.tiles) {
+            Tile.addTile(tile.name, json.res[tile.resID]);
+        }
+        const area = new Area([], new AreaCamera(0, 0, 1000, 1000));
+        for (let tile of json.json.map) {
+            area.members.push(new Tile(tile.pos[0] * json.json.size, tile.pos[1] * json.json.size, json.json.size, tile.id + baseID, !json.json.tiles[tile.id].background));
+        }
+        return area;
+    }
     constructor(members, camera) {
         this.members = members;
         this.camera = camera;
@@ -862,7 +874,6 @@ class Tile extends GameElement {
         image.src = typeof Tile.tiles[id].image === "string" ? Tile.tiles[id].image : Tile.tiles[id].image.src;
         image.onload = () => {
             _this.setImage(image);
-            ;
         };
     }
     static addTile(name, image) {
@@ -930,3 +941,4 @@ class Tile extends GameElement {
 }
 Tile.defaultTileSize = 100;
 Tile.defaultTexture = Tile._createDefaultTexture();
+Tile.tiles = [];

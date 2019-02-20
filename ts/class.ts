@@ -680,7 +680,7 @@ class GameEntity extends GameElement {
      * fait sauté l'entité
      * @param power la puissance du saut de l'entité
      */
-    jump(power: number = 40) {
+    jump(power: number = 30) {
         if (this.isJumping) return;
         if (this.lastJump !== null && new Date().getTime() - this.lastJump.getTime() < this.jumpTimeOut) return;;
         this.fj = Math.abs(power);
@@ -755,7 +755,8 @@ class GameEntity extends GameElement {
         if (!touchGround) this.isJumping = true;
         if (this.fj > 0) {
             this.fj -= this.gravity;
-            this.gravity += .3;
+            this.gravity += .1;
+            
             for (let c of collisions) {
                 if (c.res && c.face === Face.bottom && c.superposed) {
                     this.fj = -.1;
@@ -769,8 +770,9 @@ class GameEntity extends GameElement {
             }
         } else {
             if (!touchGround) {
+                console.log(this.gravity);
                 this.fy += this.gravity;
-                this.gravity += .1;
+                this.gravity = this.gravity < 2 ? this.gravity+.1: this.gravity;
             }
             else {
                 this.fy = nfy;
@@ -1026,6 +1028,14 @@ const Monster :MonsterInterface = {
         this.monsters.push(monsterClass);
     }
 }
+interface mapInterface {
+    json: {
+        tiles: {name: string, id: number, resID: number, background: boolean}[],
+        size: number,
+        map: {id: number, pos: [number, number]}[]
+    },
+    res: string[]
+}
 class AreaCamera {
     x: number;
     y: number;
@@ -1041,6 +1051,17 @@ class AreaCamera {
 class Area {
     members: Array<any extends GameElement ? any : GameElement>;
     camera: AreaCamera;
+    static createAreaFromJson(json: mapInterface) {
+        const baseID = Tile.tiles.length;
+        for(let tile of json.json.tiles) {
+            Tile.addTile(tile.name, json.res[tile.resID]);
+        }
+        const area = new Area([], new AreaCamera(0, 0, 1000, 1000));
+        for(let tile of json.json.map) {
+            area.members.push(new Tile(tile.pos[0] * json.json.size, tile.pos[1] * json.json.size, json.json.size, tile.id + baseID, !json.json.tiles[tile.id].background));
+        }
+        return area;
+    }
     constructor(members: GameElement[], camera: AreaCamera) {
         this.members = members;
         this.camera = camera;
@@ -1077,7 +1098,7 @@ interface TileInterface {
 class Tile extends GameElement {
     static defaultTileSize: number = 100;
     static defaultTexture: HTMLImageElement = Tile._createDefaultTexture();
-    static tiles: TileInterface[];
+    static tiles: TileInterface[] = [];
 
     constructor(x: number, y: number, size: number = Tile.defaultTileSize, id: number, collision: boolean = false) {
         super(size, size, x, y, 1, { type: 'image', IMGPath: '' }, 0, 0, collision);
@@ -1086,7 +1107,7 @@ class Tile extends GameElement {
         let _this = this;
         image.src = typeof Tile.tiles[id].image === "string" ? <string>Tile.tiles[id].image : (<HTMLImageElement>Tile.tiles[id].image).src;
         image.onload = () => {
-            _this.setImage(image);;
+            _this.setImage(image);
         }
 
     }

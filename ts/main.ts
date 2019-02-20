@@ -15,36 +15,17 @@ ctx.imageSmoothingEnabled = false;
 
 
 
-const ground = new GameElement(1000 - 0, 100, 0, 900, 0, {
-    type: "rectangle",
-    color: "green"
-}, 0, 0, true);
-const wallRight = new GameElement(100, 1000 - 100, 1000 - 100, 0, 0, {
-    type: "rectangle",
-    color: 'red'
-}, 0, 0, true);
-const wallLeft = new GameElement(100, 600, 0, 0, 0, {
-    type: 'rectangle',
-    color: 'pink'
-}, 0, 0, true);
-const plat1 = new GameElement(1000 / 3, 100, 0, 600, 0, {
-    type: 'rectangle',
-    color: 'orange'
-}, 0, 0, true);
-const plat2 = new GameElement(1000 / 3, 100, 1000 / 3 * 2 / 2, 300, 0, {
-    type: 'rectangle',
-    color: 'blue'
-}, 0, 0, true);
+
 for (let i of CollisionObjects) {
     i.y += 250;
     i.x += 250;
 }
-const player = new Player(250, 1050, false);
+const player = new Player(0, 0, true);
 const m0 = Monster.createMonsterEntity(250, 1050, 0);
-
-const area = new Area([ground, wallLeft, wallRight, plat1, plat2, m0, player], new AreaCamera(player.x - (750 - player.width / 2), player.y - (750 - player.height / 2), 1500, 1500));
+let area :Area | null = null;
 
 player.move = function () {
+    if(area === null) return;
     Player.prototype.move.call(player);
     area.camera.x = player.x - (area.camera.width / 2 - player.width / 2);
     area.camera.y = player.y - (area.camera.height / 2 - player.height / 2);
@@ -52,10 +33,12 @@ player.move = function () {
 
 player.setAction(Actions.walking);
 function draw(): void {
+    if(area === null) return;
     ctx.clearRect(0, 0, cw, ch);
     area.draw(ctx);
 }
 function move(): void {
+    if(area === null) return;
     area.membersAnime();
     area.membersMove();
     player.fx = 0;
@@ -95,3 +78,6 @@ const draw_interval: number = setInterval(draw, 1000 / draw_rate);
 document.addEventListener('keydown', e => { if (activeKeys.indexOf(e.keyCode) === -1) activeKeys.push(e.keyCode); });
 
 document.addEventListener('keyup', e => { if (activeKeys.indexOf(e.keyCode) !== -1) activeKeys.splice(activeKeys.indexOf(e.keyCode), 1); });
+
+area = Area.createAreaFromJson(<mapInterface>maparea);
+area.members.push(player);
